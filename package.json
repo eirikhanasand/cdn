@@ -1,7 +1,7 @@
 {
-  "name": "cdn.hanasand.com",
+  "name": "cdn",
   "version": "1.0.0",
-  "description": "CDN for Hanasand.com",
+  "description": "CDN for hanasand.com",
   "license": "ISC",
   "author": "Eirik Hanasand",
   "type": "module",
