@@ -1,4 +1,5 @@
 import run from '#db'
+import estimateReadingTime from '#utils/estimateReadTime.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function getShare(req: FastifyRequest, res: FastifyReply) {
@@ -17,10 +18,8 @@ export default async function getShare(req: FastifyRequest, res: FastifyReply) {
             }
 
             const data = result.rows[0]
-            const response = {
-                ...data,
-                wordCount: data.content.split(' ').length
-            }
+            const readTime = estimateReadingTime(data.content)
+            const response = { ...data, ...readTime }
             return res.status(200).send(response)
         } catch (error) {
             return res.status(404).send({ error: 'Share not found' })
