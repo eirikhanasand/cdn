@@ -15,9 +15,15 @@ export default async function getFile(req: FastifyRequest, res: FastifyReply) {
         }
 
         const file = result.rows[0]
+        const data = file.data as Share
+        const response = {
+            ...data,
+            wordCount: data.content.split(' ').length
+        }
+
         res.header("Content-Type", file.type)
         res.header("Content-Disposition", `inline; filename="${file.name}"`)
-        return res.send(file.data)
+        return res.send(response)
     } catch (err) {
         console.log(err)
         res.status(500).send({ error: "Internal server error" })
