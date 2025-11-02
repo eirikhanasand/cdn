@@ -50,6 +50,16 @@ CREATE TABLE IF NOT EXISTS links (
     timestamp TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- VMs
+CREATE TABLE IF NOT EXISTS vms (
+    project_id TEXT PRIMARY KEY,
+    vm_id TEXT NOT NULL,
+    last_log TEXT,
+    last_used TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_files_path ON files(path);
 CREATE INDEX IF NOT EXISTS idx_share_path ON share(path);
 CREATE INDEX IF NOT EXISTS idx_share_path ON share(parent);
+CREATE INDEX IF NOT EXISTS idx_vms ON vms(vm_id);
