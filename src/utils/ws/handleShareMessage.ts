@@ -52,15 +52,19 @@ function queueSave(id: string, content: string) {
 
     const timer = setTimeout(async () => {
         const entry = pendingUpdates.get(id)
-        if (!entry) return
+        if (!entry) {
+            return
+        }
+
         try {
             await run(
                 `UPDATE share SET content = $1, timestamp = NOW() WHERE id = $2`,
                 [entry.content, id]
             )
-            console.log(`💾 Saved share ${id} to DB`)
+
+            console.log(`Saved share ${id} to DB`)
         } catch (err) {
-            console.error(`❌ Failed to save share ${id}:`, err)
+            console.error(`Failed to save share ${id}:`, err)
         } finally {
             pendingUpdates.delete(id)
         }
