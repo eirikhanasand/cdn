@@ -6,9 +6,9 @@ import registerClient from './registerClient.ts'
 export const shellClients = new Map<string, Set<WebSocket>>()
 const messageBuffer: Buffer[] = []
 
-export default function followShell(id: string, connection: WebSocket) {
+export default function followShell(id: string, name: string, connection: WebSocket) {
     try {
-        const internalWs = new WebSocket(`${config.internal_wss}${id}`, {
+        const internalWs = new WebSocket(`${config.internal_wss}/api/ws/${name}/shell/${id}`, {
             headers: {
                 'User-Agent': 'hanasand_internal'
             }

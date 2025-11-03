@@ -41,7 +41,7 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                 //     followShell(name, 'bash', connection)
                 // }
     
-                followShell(name, connection)
+                followShell(id, name, connection)
                 
                 connection.on('message', message => {
                     handleTerminalMessage(id, connection, message)
