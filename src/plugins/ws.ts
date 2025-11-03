@@ -24,31 +24,36 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
         })
 
         fastify.get('/api/share/ws/:name/shell/:id', { websocket: true }, async(connection, req: FastifyRequest) => {
-            const { id, name } = (req.params as { id: string, name: string })
-            registerClient(id, connection)
-            // const query = await loadSQL('getAncestor.sql')
-            // const ancestorResult = await run(query, [id])
-            // const ancestorId = ancestorResult.rows[0]?.id
-
-            // stores the last output from the vm
-            // const result = await run('SELECT * FROM vms WHERE project_id = $1', [ancestorId])
-            // const vm: VM = result.rows[0]
-            // if (!vm) {
-            //     const createVM = await 
-            //     const result = await run('INSERT INTO vms (project_id, vm_id, last_log) VALUES ($1, $2, \'{}\');')
-            // } else {
-            //     followShell(name, 'bash', connection)
-            // }
-
-            followShell(name, connection)
-            
-            connection.on('message', message => {
-                handleTerminalMessage(id, connection, message)
-            })
-
-            connection.on('close', () => {
-                removeClient(id, connection)
-            })
+            try {
+                const { id, name } = (req.params as { id: string, name: string })
+                registerClient(id, connection)
+                // const query = await loadSQL('getAncestor.sql')
+                // const ancestorResult = await run(query, [id])
+                // const ancestorId = ancestorResult.rows[0]?.id
+    
+                // stores the last output from the vm
+                // const result = await run('SELECT * FROM vms WHERE project_id = $1', [ancestorId])
+                // const vm: VM = result.rows[0]
+                // if (!vm) {
+                //     const createVM = await 
+                //     const result = await run('INSERT INTO vms (project_id, vm_id, last_log) VALUES ($1, $2, \'{}\');')
+                // } else {
+                //     followShell(name, 'bash', connection)
+                // }
+    
+                followShell(name, connection)
+                
+                connection.on('message', message => {
+                    handleTerminalMessage(id, connection, message)
+                })
+    
+                connection.on('close', () => {
+                    removeClient(id, connection)
+                })
+            } catch (error) {
+                connection.send(Buffer.from(JSON.stringify(error)))
+                console.log(error)
+            }
         })
     })
 })

@@ -16,7 +16,6 @@ fastify.register(fastifyMultipart, {
     }
 })
 
-fastify.register(websocketPlugin)
 fastify.register(cors, {
     origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']
@@ -24,6 +23,7 @@ fastify.register(cors, {
 
 const port = Number(process.env.PORT) || 8081
 
+fastify.register(websocketPlugin)
 fastify.register(ws, { prefix: "/api" })
 fastify.register(routes, { prefix: "/api" })
 fastify.get('/', getIndex)
