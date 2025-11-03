@@ -9,7 +9,7 @@ const messageBuffer: Buffer[] = []
 export default function followTerminal(id: string, connection: WebSocket) {
     const internalWs = new WebSocket(`${config.internal_wss}${id}`, {
         headers: {
-            'User-Agent': 'MyCustomUserAgent/1.0'
+            'User-Agent': 'hanasand_internal'
         }
     })
 
