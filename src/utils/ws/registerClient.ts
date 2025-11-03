@@ -1,18 +1,25 @@
 import { WebSocket } from 'ws'
-import { shareClients } from './handleMessage.ts'
-import { WebSocket as WS } from 'ws'
+import { shareClients } from './handleShareMessage.ts'
 
-export function registerClient(id: string, socket: WebSocket) {
+export default function registerClient(id: string, socket: WebSocket, clients?: Map<string, Set<WebSocket>>) {
     if (!shareClients.has(id)) {
         shareClients.set(id, new Set())
+    }
+
+    if (clients) {
+        if (!clients.has(id)) {
+            clients.set(id, new Set())
+        }
+
+        clients.get(id)!.add(socket)
     }
 
     shareClients.get(id)!.add(socket)
     broadcastJoin(id)
 }
 
-function broadcastJoin(id: string) {
-    const clients = shareClients.get(id)
+function broadcastJoin(id: string, customClients?: Map<string, Set<WebSocket>>) {
+    const clients = (customClients || shareClients).get(id)
     if (!clients) {
         return
     }
@@ -24,7 +31,7 @@ function broadcastJoin(id: string) {
     })
 
     for (const client of clients) {
-        if (client.readyState === WS.OPEN) {
+        if (client.readyState === WebSocket.OPEN) {
             client.send(payload)
         }
     }

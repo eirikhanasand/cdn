@@ -11,3 +11,7 @@ type Share = {
     owner: string
     parent: string
 }
+
+type VM = {
+
+}

@@ -33,7 +33,8 @@ const config = {
     DB_HOST: env.DB_HOST,
     DB_USER: env.DB_USER,
     DB_PASSWORD: env.DB_PASSWORD,
-    CACHE_TTL: 30000
+    CACHE_TTL: 30000,
+    internal_wss: 'wss://internal.hanasand.com/api',
 }
 
 export default config

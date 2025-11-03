@@ -5,14 +5,14 @@ import { WebSocket as WS } from 'ws'
 export const shareClients = new Map<string, Set<WS>>()
 export const pendingUpdates = new Map<string, { content: string; timer: NodeJS.Timeout }>()
 
-export default async function handleShareMessage(
+export default async function handleTerminalMessage(
     id: string,
     socket: WS,
     rawMessage: RawData,
 ) {
     try {
         const msg = JSON.parse(rawMessage.toString())
-        if (msg.type !== 'edit') {
+        if (msg.type !== 'terminalMessage') {
             return
         }
 
@@ -52,19 +52,16 @@ function queueSave(id: string, content: string) {
 
     const timer = setTimeout(async () => {
         const entry = pendingUpdates.get(id)
-        if (!entry) {
-            return
-        }
-
+        if (!entry) return
         try {
             await run(
-                `UPDATE share SET content = $1, timestamp = NOW() WHERE id = $2`,
-                [entry.content, id]
+                `UPDATE vms SET last_log = last_log || $1, last_used = NOW() WHERE project_id = $2`,
+                [[entry.content], id]
             )
 
-            console.log(`Saved share ${id} to DB`)
+            console.log(`Saved vm ${id} to DB`)
         } catch (err) {
-            console.error(`Failed to save share ${id}:`, err)
+            console.error(`Failed to save vm ${id}:`, err)
         } finally {
             pendingUpdates.delete(id)
         }

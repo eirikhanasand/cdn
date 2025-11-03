@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS share (
     locked BOOLEAN DEFAULT FALSE,
     owner TEXT,
     parent TEXT,
+    type TEXT NOT NULL DEFAULT 'file' CHECK (type IN ('file', 'folder')),
     timestamp TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -54,7 +55,7 @@ CREATE TABLE IF NOT EXISTS links (
 CREATE TABLE IF NOT EXISTS vms (
     project_id TEXT PRIMARY KEY,
     vm_id TEXT NOT NULL,
-    last_log TEXT,
+    last_log TEXT[],
     last_used TIMESTAMPTZ DEFAULT NOW(),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
