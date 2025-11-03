@@ -1,26 +1,39 @@
 import run from '#db'
+import permissionsWrapper from '#utils/auth/permissionsWrapper.ts'
 import getWords from '#utils/getWords.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function postShare(req: FastifyRequest, res: FastifyReply) {
     try {
-        const { id, path, content } = req.body as { id?: string, path?: string; content?: string }
+        const { id, path, content, parent } = req.body as { id?: string, path?: string; content?: string, parent?: string }
+        const idHeader = req.headers['id']
+        const userId = Array.isArray(idHeader) ? idHeader.join('') : idHeader 
         const alias = getWords()
-        
+
         if (!id || !path || !content) {
             return res.status(400).send({ error: 'Missing required fields: id, path or content' })
         }
 
+        if (parent) {
+            const perms = await permissionsWrapper({ userId: userId || '', shareId: id })
+            if (!perms.status) {
+                return res.status(400).send({ error: 'Unauthorized' })
+            }
+        }
+
         const query = `
-            INSERT INTO shares (id, path, content, alias)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO shares (id, path, content, alias${parent ? ', parent' : ''})
+            VALUES ($1, $2, $3, $4${parent ? ', $5' : ''})
             ON CONFLICT (id)
             DO UPDATE SET
                 path = EXCLUDED.path,
                 content = EXCLUDED.content
             RETURNING *
         `
-        const result = await run(query, [id, path, content, alias])
+
+        const params = [id, path, content, alias]
+        parent && params.push(parent)
+        const result = await run(query, params)
 
         if (!result || result.rowCount === 0) {
             return res.status(500).send({ error: 'Failed to create share' })

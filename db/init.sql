@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS shares (
     git TEXT,
     locked BOOLEAN DEFAULT FALSE,
     owner TEXT,
+    editors TEXT[],
     parent TEXT,
     alias TEXT NOT NULL,
     type TEXT NOT NULL DEFAULT 'file' CHECK (type IN ('file', 'folder')),

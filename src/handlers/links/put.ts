@@ -1,10 +1,16 @@
 import run from '#db'
+import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function putLink(req: FastifyRequest, res: FastifyReply) {
     try {
         const { id } = req.params as { id: string }
         const { path } = req.body as { path?: string }
+
+        const allowed = await tokenWrapper(id, (req.headers['authorization'] || ''))
+        if (!allowed.status) {
+            return res.status(400).send({ error: 'Unauthorized' })
+        }
 
         if (!id) {
             return res.status(400).send({ error: 'Missing link ID' })

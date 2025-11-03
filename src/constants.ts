@@ -34,6 +34,7 @@ const config = {
     DB_USER: env.DB_USER,
     DB_PASSWORD: env.DB_PASSWORD,
     CACHE_TTL: 30000,
+    api: 'https://api.hanasand.com/api',
     internal_wss: 'wss://internal.hanasand.com/api',
 }
 

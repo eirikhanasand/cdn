@@ -1,11 +1,17 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import run from '#utils/db.ts'
+import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 
 export default async function deleteFile(req: FastifyRequest, res: FastifyReply) {
     const { id } = req.params as { id: string }
 
     if (!id) {
         return res.status(400).send({ error: 'Missing image ID' })
+    }
+
+    const allowed = await tokenWrapper(id, (req.headers['authorization'] || ''))
+    if (!allowed.status) {
+        return res.status(400).send({ error: 'Unauthorized' })
     }
 
     try {

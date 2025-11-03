@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import run from '#utils/db.ts'
+import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 
 type PutFileProps = {
     name?: string
@@ -12,6 +13,11 @@ type PutFileProps = {
 export default async function putFile(req: FastifyRequest, res: FastifyReply) {
     const { id } = req.params as { id: string }
     const { name, description, data, path, type } = req.body as PutFileProps
+
+    const allowed = await tokenWrapper(id, (req.headers['authorization'] || ''))
+    if (!allowed.status) {
+        return res.status(400).send({ error: 'Unauthorized' })
+    }
 
     if (!name && !description && !data && !path && !type) {
         return res.status(400).send({ error: "Nothing to update" })
