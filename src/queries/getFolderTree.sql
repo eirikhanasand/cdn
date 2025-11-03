@@ -2,7 +2,7 @@ WITH RECURSIVE folder_tree AS (
     SELECT
         id,
         alias,
-        path,
+        name,
         type,
         parent
     FROM shares
@@ -12,7 +12,7 @@ WITH RECURSIVE folder_tree AS (
 
     SELECT s.id,
            s.alias,
-           s.path,
+           s.name,
            s.type,
            s.parent
     FROM shares s
