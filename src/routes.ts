@@ -12,6 +12,7 @@ import checkPath from './handlers/files/checkPath.ts'
 import getLink from './handlers/links/get.ts'
 import putLink from './handlers/links/put.ts'
 import postLink from './handlers/links/post.ts'
+import getWords from './handlers/words/get.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index
@@ -34,4 +35,7 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     fastify.get("/link/:id", getLink)
     fastify.put("/link/:id", putLink)
     fastify.post("/link/:id", postLink)
+
+    // words
+    fastify.get('/words', getWords)
 }
