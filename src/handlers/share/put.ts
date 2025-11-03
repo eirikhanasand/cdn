@@ -15,7 +15,7 @@ export default async function putShare(req: FastifyRequest, res: FastifyReply) {
         }
 
         const query = `
-        UPDATE share
+        UPDATE shares
         SET
             path = COALESCE($2, path),
             content = COALESCE($3, content)

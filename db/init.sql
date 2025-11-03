@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS files (
     uploaded_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Share
-CREATE TABLE IF NOT EXISTS share (
+-- Shares
+CREATE TABLE IF NOT EXISTS shares (
     id TEXT PRIMARY KEY,
     path TEXT,
     content TEXT NOT NULL,
@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS share (
     locked BOOLEAN DEFAULT FALSE,
     owner TEXT,
     parent TEXT,
+    alias TEXT NOT NULL,
     type TEXT NOT NULL DEFAULT 'file' CHECK (type IN ('file', 'folder')),
     timestamp TIMESTAMPTZ DEFAULT NOW()
 );
@@ -61,6 +62,6 @@ CREATE TABLE IF NOT EXISTS vms (
 );
 
 CREATE INDEX IF NOT EXISTS idx_files_path ON files(path);
-CREATE INDEX IF NOT EXISTS idx_share_path ON share(path);
-CREATE INDEX IF NOT EXISTS idx_share_path ON share(parent);
+CREATE INDEX IF NOT EXISTS idx_shares_path ON shares(path);
+CREATE INDEX IF NOT EXISTS idx_shares_path ON shares(parent);
 CREATE INDEX IF NOT EXISTS idx_vms ON vms(vm_id);

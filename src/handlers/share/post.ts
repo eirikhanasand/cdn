@@ -1,24 +1,26 @@
 import run from '#db'
+import getWords from '#utils/getWords.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function postShare(req: FastifyRequest, res: FastifyReply) {
     try {
         const { id, path, content } = req.body as { id?: string, path?: string; content?: string }
-
+        const alias = getWords()
+        
         if (!id || !path || !content) {
             return res.status(400).send({ error: 'Missing required fields: id, path or content' })
         }
 
         const query = `
-        INSERT INTO share (id, path, content)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (id)
-        DO UPDATE SET
-            path = EXCLUDED.path,
-            content = EXCLUDED.content
-        RETURNING *
+            INSERT INTO shares (id, path, content, alias)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (id)
+            DO UPDATE SET
+                path = EXCLUDED.path,
+                content = EXCLUDED.content
+            RETURNING *
         `
-        const result = await run(query, [id, path, content])
+        const result = await run(query, [id, path, content, alias])
 
         if (!result || result.rowCount === 0) {
             return res.status(500).send({ error: 'Failed to create share' })

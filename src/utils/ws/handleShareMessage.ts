@@ -58,7 +58,7 @@ function queueSave(id: string, content: string) {
 
         try {
             await run(
-                `UPDATE share SET content = $1, timestamp = NOW() WHERE id = $2`,
+                `UPDATE shares SET content = $1, timestamp = NOW() WHERE id = $2`,
                 [entry.content, id]
             )
 
