@@ -24,7 +24,7 @@ Three words by default.
 ## Usage
 
 - **Default:** `GET /words` → 1 random name (all categories)  
-- **Custom count:** `?count=10` → 10 names  
+- **Custom count:** `?count=10` → 10 names  (max 100)
 - **Custom categories:** `?categories=animals,fruits` → includes only selected sets + city
 
 ---
