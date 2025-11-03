@@ -61,5 +61,5 @@ export default async function getWords(req: FastifyRequest<{ Querystring: Query 
         results.push(name)
     }
 
-    res.send({ names: results })
+    res.send({ words: results })
 }
