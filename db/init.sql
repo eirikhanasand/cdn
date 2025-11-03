@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS files (
 -- Shares
 CREATE TABLE IF NOT EXISTS shares (
     id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
     path TEXT,
     content TEXT NOT NULL,
     git TEXT,
@@ -40,7 +41,7 @@ CREATE TABLE IF NOT EXISTS shares (
     owner TEXT,
     editors TEXT[],
     parent TEXT,
-    alias TEXT NOT NULL,
+    alias TEXT,
     type TEXT NOT NULL DEFAULT 'file' CHECK (type IN ('file', 'folder')),
     timestamp TIMESTAMPTZ DEFAULT NOW()
 );
