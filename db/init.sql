@@ -65,4 +65,6 @@ CREATE TABLE IF NOT EXISTS vms (
 CREATE INDEX IF NOT EXISTS idx_files_path ON files(path);
 CREATE INDEX IF NOT EXISTS idx_shares_path ON shares(path);
 CREATE INDEX IF NOT EXISTS idx_shares_path ON shares(parent);
+CREATE INDEX IF NOT EXISTS idx_shares_type ON shares(type);
+CREATE INDEX IF NOT EXISTS idx_shares_locked ON shares(locked);
 CREATE INDEX IF NOT EXISTS idx_vms ON vms(vm_id);
