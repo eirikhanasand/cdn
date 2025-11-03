@@ -8,7 +8,7 @@ const messageBuffer: Buffer[] = []
 
 export default function followShell(id: string, name: string, connection: WebSocket) {
     try {
-        const internalWs = new WebSocket(`${config.internal_wss}/api/ws/${name}/shell/${id}`, {
+        const internalWs = new WebSocket(`${config.internal_wss}/ws/${name}/shell/${id}`, {
             headers: {
                 'User-Agent': 'hanasand_internal'
             }
