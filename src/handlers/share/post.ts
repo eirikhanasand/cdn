@@ -5,7 +5,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function postShare(req: FastifyRequest, res: FastifyReply) {
     try {
-        const { id, path, content, parent } = req.body as { id?: string, path?: string; content?: string, parent?: string }
+        const { id, name, path, content, parent } = req.body as { id?: string, name?: string, path?: string; content?: string, parent?: string }
         const idHeader = req.headers['id']
         const userId = Array.isArray(idHeader) ? idHeader.join('') : idHeader 
         const alias = getWords()
@@ -22,8 +22,8 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
         }
 
         const query = `
-            INSERT INTO shares (id, path, content, alias${parent ? ', parent' : ''})
-            VALUES ($1, $2, $3, $4${parent ? ', $5' : ''})
+            INSERT INTO shares (id, name, path, content, alias${parent ? ', parent' : ''})
+            VALUES ($1, $2, $3, $4, $5${parent ? ', $6' : ''})
             ON CONFLICT (id)
             DO UPDATE SET
                 path = EXCLUDED.path,
@@ -31,7 +31,7 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
             RETURNING *
         `
 
-        const params = [id, path, content, alias]
+        const params = [id, name || null, path, content, alias]
         parent && params.push(parent)
         const result = await run(query, params)
 
