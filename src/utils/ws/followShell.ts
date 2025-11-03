@@ -1,7 +1,7 @@
 import { WebSocket } from 'ws'
 import config from '#constants'
-import removeClient from './removeClient'
-import registerClient from './registerClient'
+import removeClient from './removeClient.ts'
+import registerClient from './registerClient.ts'
 
 export const shellClients = new Map<string, Set<WebSocket>>()
 const messageBuffer: Buffer[] = []
