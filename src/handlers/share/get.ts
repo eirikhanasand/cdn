@@ -1,5 +1,6 @@
 import run from '#db'
 import estimateReadingTime from '#utils/estimateReadTime.ts'
+import getWords from '#utils/getWords.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function getShare(req: FastifyRequest, res: FastifyReply) {
@@ -35,12 +36,13 @@ async function queryShare(id: string) {
     const result = await run(query, [id])
 
     if (!result || result.rowCount === 0) {
+        const alias = getWords()
         const query = `
-        INSERT INTO shares (id, content, name)
-        VALUES ($1, $2, $3)
-        RETURNING *
+            INSERT INTO shares (id, content, name, alias)
+            VALUES ($1, $2, $3, $4)
+            RETURNING *
         `
-        const insertResult = await run(query, [id, "", id])
+        const insertResult = await run(query, [id, "", id, alias])
         if (insertResult) {
             const query = 'SELECT * FROM shares WHERE id = $1'
             const result = await run(query, [id])
