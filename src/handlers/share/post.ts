@@ -31,7 +31,7 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
             RETURNING *
         `
 
-        const params = [id, name || id, path, content, alias]
+        const params = [id, name || id, path, content, alias[0]]
         parent && params.push(parent)
         const result = await run(query, params)
 

@@ -42,7 +42,7 @@ async function queryShare(id: string) {
             VALUES ($1, $2, $3, $4)
             RETURNING *
         `
-        const insertResult = await run(query, [id, "", id, alias])
+        const insertResult = await run(query, [id, "", id, alias[0]])
         if (insertResult) {
             const query = 'SELECT * FROM shares WHERE id = $1'
             const result = await run(query, [id])
