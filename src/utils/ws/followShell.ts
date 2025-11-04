@@ -25,9 +25,34 @@ export default function followShell(id: string, name: string, connection: WebSoc
             messageBuffer.length = 0
         })
 
+        internalWs.on('close', () => {
+            try {
+                connection.close()
+            } catch (error) { 
+                console.log(`Error occured while closing connection for id ${id}: ${error}`)
+            }
+        })
+
+        internalWs.on('error', (error) => {
+              console.error(`internalWs connection failed for ${id}:`, error.message)
+                if (connection.readyState === WebSocket.OPEN) {
+                    try {
+                        connection.send(JSON.stringify({ type: 'error', message: 'Internal shell connection failed', detail: error.message }))
+                    } catch (error) {
+                        console.error(`Send to client failed: ${error}`)
+                    }
+                }
+
+                connection.close()
+        })
+
         connection.on('message', (msg: Buffer) => {
             if (internalWs.readyState === WebSocket.OPEN) {
-                internalWs.send(msg)
+                try {
+                    internalWs.send(msg)
+                } catch (error) {
+                    console.error(`Send to internal websocket failed: ${error}`)
+                }
             } else {
                 messageBuffer.push(msg)
             }
@@ -38,13 +63,6 @@ export default function followShell(id: string, name: string, connection: WebSoc
             internalWs.close()
         })
 
-        internalWs.on('close', () => {
-            try {
-                connection.close()
-            } catch (error) { 
-                console.log(`Error occured while closing connection for id ${id}: ${error}`)
-            }
-        })
     } catch (error) {
         connection.send(Buffer.from(JSON.stringify(error)))
         console.log(error)

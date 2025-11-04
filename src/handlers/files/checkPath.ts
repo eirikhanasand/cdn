@@ -19,8 +19,8 @@ export default async function checkPath(req: FastifyRequest, res: FastifyReply) 
         } else {
             return res.send({ exists: true, id: result.rows[0].id })
         }
-    } catch (err) {
-        console.error(err)
+    } catch (error) {
+        console.error(error)
         return res.status(500).send({ error: "Internal server error" })
     }
 }

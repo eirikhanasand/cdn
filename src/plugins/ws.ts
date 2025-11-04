@@ -18,6 +18,10 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                 handleShareMessage(id, connection, message)
             })
 
+            connection.on('error', (error) => {
+                console.log(`Connection error: ${error}`)
+            })
+
             connection.on('close', () => {
                 removeClient(id, connection)
             })
@@ -43,8 +47,13 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
     
                 followShell(id, name, connection)
                 
-                connection.on('message', message => {
+                connection.on('message', (message) => {
                     handleTerminalMessage(id, connection, message)
+                })
+
+                connection.on('error', (error) => {
+                    removeClient(id, connection)
+                    console.log(error)
                 })
     
                 connection.on('close', () => {

@@ -18,8 +18,8 @@ export default async function handleTerminalMessage(
 
         broadcastUpdate(id, socket, msg.content)
         queueSave(id, msg.content)
-    } catch (err) {
-        console.error('Invalid WebSocket message:', err)
+    } catch (error) {
+        console.error(`Invalid WebSocket message: ${error}`)
     }
 }
 
@@ -60,8 +60,8 @@ function queueSave(id: string, content: string) {
             )
 
             console.log(`Saved vm ${id} to DB`)
-        } catch (err) {
-            console.error(`Failed to save vm ${id}:`, err)
+        } catch (error) {
+            console.error(`Failed to save vm ${id}: ${error}`)
         } finally {
             pendingUpdates.delete(id)
         }

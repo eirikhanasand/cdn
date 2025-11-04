@@ -31,8 +31,8 @@ fastify.get('/', getIndex)
 async function start() {
     try {
         await fastify.listen({ port, host: '0.0.0.0' })
-    } catch (err) {
-        fastify.log.error(err)
+    } catch (error) {
+        fastify.log.error(error)
         process.exit(1)
     }
 }

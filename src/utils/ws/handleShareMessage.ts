@@ -18,8 +18,8 @@ export default async function handleShareMessage(
 
         broadcastUpdate(id, socket, msg.content)
         queueSave(id, msg.content)
-    } catch (err) {
-        console.error('Invalid WebSocket message:', err)
+    } catch (error) {
+        console.log(`Invalid WebSocket message: ${error}`)
     }
 }
 
@@ -63,8 +63,8 @@ function queueSave(id: string, content: string) {
             )
 
             console.log(`Saved share ${id} to DB`)
-        } catch (err) {
-            console.error(`Failed to save share ${id}:`, err)
+        } catch (error) {
+            console.error(`Failed to save share ${id}: ${error}`)
         } finally {
             pendingUpdates.delete(id)
         }

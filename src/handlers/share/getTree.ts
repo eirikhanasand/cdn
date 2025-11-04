@@ -13,9 +13,9 @@ export default async function getTree(req: FastifyRequest, res: FastifyReply) {
             return res.status(404).send({ error: 'Share not found' })
         }
 
-        return res.send(result.rows);
-    } catch (err) {
-        console.error(err);
+        return res.send(result.rows)
+    } catch (error) {
+        console.error(error)
         return res.status(500).send({ error: 'Internal server error' })
     }
 }

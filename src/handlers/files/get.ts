@@ -18,8 +18,8 @@ export default async function getFile(req: FastifyRequest, res: FastifyReply) {
         res.header("Content-Type", file.type)
         res.header("Content-Disposition", `inline; filename="${file.name}"`)
         return res.send(file.data)
-    } catch (err) {
-        console.log(err)
+    } catch (error) {
+        console.log(error)
         res.status(500).send({ error: "Internal server error" })
     }
 }
