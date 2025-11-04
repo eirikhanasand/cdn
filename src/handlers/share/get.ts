@@ -36,11 +36,11 @@ async function queryShare(id: string) {
 
     if (!result || result.rowCount === 0) {
         const query = `
-        INSERT INTO shares (id, content)
-        VALUES ($1, $2)
+        INSERT INTO shares (id, content, name)
+        VALUES ($1, $2, $3)
         RETURNING *
         `
-        const insertResult = await run(query, [id, ""])
+        const insertResult = await run(query, [id, "", id])
         if (insertResult) {
             const query = 'SELECT * FROM shares WHERE id = $1'
             const result = await run(query, [id])
