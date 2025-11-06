@@ -38,7 +38,7 @@ export default async function putShare(req: FastifyRequest, res: FastifyReply) {
         const result = await run(query, [id, path || null, content, name || null])
 
         if (!result || result.rowCount === 0) {
-            return res.status(404).send({ error: 'Share not found' })
+            return res.status(404).send({ error: `Share ${id} not found` })
         }
 
         return res.status(200).send(result.rows[0])

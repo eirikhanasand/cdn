@@ -6,7 +6,7 @@ WITH RECURSIVE folder_tree AS (
         type,
         parent
     FROM shares
-    WHERE id = $1
+    WHERE id = $1::TEXT
 
     UNION ALL
 

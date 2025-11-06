@@ -10,7 +10,7 @@ export default async function getTree(req: FastifyRequest, res: FastifyReply) {
         const result = await run(query, [id])
 
         if (result.rows.length === 0) {
-            return res.status(404).send({ error: 'Share not found' })
+            return res.status(404).send({ error: `Share ${id} not found` })
         }
 
         return res.send(result.rows)
