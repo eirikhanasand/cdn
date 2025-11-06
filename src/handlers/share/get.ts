@@ -4,30 +4,23 @@ import getWords from '#utils/getWords.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function getShare(req: FastifyRequest, res: FastifyReply) {
+    const { id } = req.params as { id: string }
+    if (!id) {
+        return res.status(400).send({ error: 'Missing share ID' })
+    }
+
     try {
-        const { id } = req.params as { id: string }
-
-        if (!id) {
-            return res.status(400).send({ error: 'Missing share ID' })
+        const result = await queryShare(id)
+        if (result === 404) {
+            throw new Error(`Share ${id} not found`)
         }
 
-        try {
-            const result = await queryShare(id)
-
-            if (result === 404) {
-                throw new Error("Share not found")
-            }
-
-            const data = result.rows[0]
-            const readTime = estimateReadingTime(data.content)
-            const response = { ...data, ...readTime }
-            return res.status(200).send(response)
-        } catch (error) {
-            return res.status(404).send({ error: 'Share not found' })
-        }
+        const data = result.rows[0]
+        const readTime = estimateReadingTime(data.content)
+        const response = { ...data, ...readTime }
+        return res.status(200).send(response)
     } catch (error) {
-        console.log(`Error fetching share: ${error}`)
-        return res.status(500).send({ error: 'Failed to fetch share' })
+        return res.status(404).send({ error: `Share ${id} not found` })
     }
 }
 
