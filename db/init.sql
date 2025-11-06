@@ -54,16 +54,6 @@ CREATE TABLE IF NOT EXISTS links (
     timestamp TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Certificates
-CREATE TABLE IF NOT EXISTS certificates (
-    id TEXT PRIMARY KEY,
-    public_key TEXT NOT NULL,
-    name TEXT NOT NULL,
-    owner TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    created_by TEXT NOT NULL
-);
-
 -- VMs
 CREATE TABLE IF NOT EXISTS vms (
     project_id TEXT PRIMARY KEY,

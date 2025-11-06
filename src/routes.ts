@@ -14,10 +14,6 @@ import putLink from './handlers/links/put.ts'
 import postLink from './handlers/links/post.ts'
 import getWords from './handlers/words/get.ts'
 import getTree from './handlers/share/getTree.ts'
-import getCertificate from './handlers/certificates/get.ts'
-import postCertificate from './handlers/certificates/post.ts'
-import putCertificate from './handlers/certificates/put.ts'
-import deleteCertificate from './handlers/certificates/delete.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index
@@ -41,12 +37,6 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     fastify.get("/link/:id", getLink)
     fastify.put("/link/:id", putLink)
     fastify.post("/link/:id", postLink)
-
-    // certificates
-    fastify.get('certificates/:id', getCertificate)
-    fastify.post('certificates/:id', postCertificate)
-    fastify.put('certificates/:id', putCertificate)
-    fastify.delete('certificates/:id', deleteCertificate)
 
     // words
     fastify.get('/words', getWords)
