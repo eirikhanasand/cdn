@@ -10,6 +10,7 @@ export default async function queryShare(id: string) {
         const query = `
             INSERT INTO shares (id, content, name, alias)
             VALUES ($1, $2, $3, $4)
+            ON CONFLICT (id) DO NOTHING
             RETURNING *
         `
         const insertResult = await run(query, [id, "", id, alias[0]])
