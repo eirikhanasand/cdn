@@ -11,7 +11,7 @@ import followShell from '#utils/ws/followShell.ts'
 export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
     fastify.register(async function (fastify) {
         fastify.get('/api/share/ws/:id', { websocket: true }, (connection, req: FastifyRequest) => {
-            const id = (req.params as { id: string}).id
+            const id = (req.params as { id: string }).id
 
             registerClient(id, connection)
             connection.on('message', message => {
@@ -27,14 +27,14 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
             })
         })
 
-        fastify.get('/api/share/ws/:name/shell/:id', { websocket: true }, async(connection, req: FastifyRequest) => {
+        fastify.get('/api/share/ws/:name/shell/:id', { websocket: true }, async (connection, req: FastifyRequest) => {
             try {
                 const { id, name } = (req.params as { id: string, name: string })
                 registerClient(id, connection)
                 // const query = await loadSQL('getAncestor.sql')
                 // const ancestorResult = await run(query, [id])
                 // const ancestorId = ancestorResult.rows[0]?.id
-    
+
                 // stores the last output from the vm
                 // const result = await run('SELECT * FROM vms WHERE project_id = $1', [ancestorId])
                 // const vm: VM = result.rows[0]
@@ -44,9 +44,9 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                 // } else {
                 //     followShell(name, 'bash', connection)
                 // }
-    
+
                 followShell(id, name, connection)
-                
+
                 connection.on('message', (message) => {
                     handleTerminalMessage(id, connection, message)
                 })
@@ -55,7 +55,7 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                     removeClient(id, connection)
                     console.log(error)
                 })
-    
+
                 connection.on('close', () => {
                     removeClient(id, connection)
                 })
