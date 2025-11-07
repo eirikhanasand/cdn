@@ -27,9 +27,9 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
             })
         })
 
-        fastify.get('/api/share/ws/:name/shell/:id', { websocket: true }, async (connection, req: FastifyRequest) => {
+        fastify.get('/api/share/ws/:name/shell/:user/:id', { websocket: true }, async (connection, req: FastifyRequest) => {
             try {
-                const { id, name } = (req.params as { id: string, name: string })
+                const { id, name, user } = (req.params as { id: string, name: string, user: string })
                 registerClient(id, connection)
                 // const query = await loadSQL('getAncestor.sql')
                 // const ancestorResult = await run(query, [id])
@@ -45,7 +45,7 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                 //     followShell(name, 'bash', connection)
                 // }
 
-                followShell(id, name, connection)
+                followShell(connection, id, name, user)
 
                 connection.on('message', (message) => {
                     handleTerminalMessage(id, connection, message)
