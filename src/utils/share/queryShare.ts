@@ -2,26 +2,17 @@ import run from '#db'
 import getWords from '#utils/getWords.ts'
 
 export default async function queryShare(id: string) {
-    const query = 'SELECT * FROM shares WHERE id = $1'
-    const result = await run(query, [id])
+    const alias = getWords()[0]
 
-    if (!result || result.rowCount === 0) {
-        const alias = getWords()
-        const query = `
-            INSERT INTO shares (id, content, name, alias)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (id) DO NOTHING
-            RETURNING *
-        `
-        const insertResult = await run(query, [id, "", id, alias[0]])
-        if (insertResult) {
-            const query = 'SELECT * FROM shares WHERE id = $1'
-            const result = await run(query, [id])
-            return result
-        }
-    }
+    const query = `
+        INSERT INTO shares (id, content, name, alias)
+        VALUES ($1, '', $1, $2)
+        ON CONFLICT (id) DO UPDATE SET id = shares.id
+        RETURNING *
+    `
+    const result = await run(query, [id, alias])
 
-    if (result.rowCount) {
+    if (result && result.rowCount) {
         return result
     }
 
