@@ -14,6 +14,7 @@ import putLink from './handlers/links/put.ts'
 import postLink from './handlers/links/post.ts'
 import getWords from './handlers/words/get.ts'
 import getTree from './handlers/share/getTree.ts'
+import getAlias from './handlers/share/getAlias.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index
@@ -30,6 +31,7 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     // share
     fastify.get("/share/:id", getShare)
     fastify.get("/share/tree/:id", getTree)
+    fastify.get("/share/alias/:alias", getAlias)
     fastify.put("/share/:id", putShare)
     fastify.post("/share/:id", postShare)
 

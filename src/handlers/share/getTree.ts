@@ -14,7 +14,6 @@ export default async function getTree(req: FastifyRequest, res: FastifyReply) {
 
         const query = await loadSQL('getFolderTree.sql')
         const result = await run(query, [id])
-
         if (result.rows.length === 0) {
             return res.status(404).send({ error: `Share ${id} not found` })
         }

@@ -1,6 +1,4 @@
-import run from '#db'
 import estimateReadingTime from '#utils/estimateReadTime.ts'
-import getWords from '#utils/getWords.ts'
 import queryShare from '#utils/share/queryShare.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
