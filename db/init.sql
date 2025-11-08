@@ -63,9 +63,57 @@ CREATE TABLE IF NOT EXISTS vms (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_files_path ON files(path);
-CREATE INDEX IF NOT EXISTS idx_shares_path ON shares(path);
-CREATE INDEX IF NOT EXISTS idx_shares_path ON shares(parent);
-CREATE INDEX IF NOT EXISTS idx_shares_type ON shares(type);
-CREATE INDEX IF NOT EXISTS idx_shares_locked ON shares(locked);
-CREATE INDEX IF NOT EXISTS idx_vms ON vms(vm_id);
+-- Blocklist to prevent DDoS
+CREATE TABLE IF NOT EXISTS blocklist (
+    id SERIAL PRIMARY KEY,
+    metric TEXT NOT NULL CHECK (metric IN ('ip', 'user_agent')),
+    value TEXT NOT NULL,
+    is_vpn BOOLEAN DEFAULT FALSE,
+    is_proxy BOOLEAN DEFAULT FALSE,
+    is_tor BOOLEAN DEFAULT FALSE,
+    is_relay BOOLEAN DEFAULT FALSE,
+    ip_owner TEXT,
+    country TEXT,
+    region TEXT,
+    city TEXT,
+    requests JSONB DEFAULT '[]'::jsonb,
+    owner TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT unique_metric_value UNIQUE(metric, value)
+);
+
+-- Request logs for DDoS
+CREATE TABLE IF NOT EXISTS request_logs (
+    id SERIAL PRIMARY KEY,
+    metric TEXT NOT NULL CHECK (metric IN ('ip', 'user_agent')),
+    value TEXT NOT NULL,
+    path TEXT NOT NULL DEFAULT '/',
+    hits INT DEFAULT 1,
+    last_seen TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT unique_metric_path UNIQUE(metric, value, path)
+);
+
+-- Updates updated at when insert happens
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Adds updated at trigger to blocklist
+CREATE TRIGGER blocklist_updated_at
+BEFORE UPDATE ON blocklist
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_files_path ON files(path);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_path ON shares(path);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_path ON shares(parent);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_alias ON shares(alias);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_type ON shares(type);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_locked ON shares(locked);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vms ON vms(vm_id);

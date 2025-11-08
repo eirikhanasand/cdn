@@ -15,6 +15,15 @@ import postLink from './handlers/links/post.ts'
 import getWords from './handlers/words/get.ts'
 import getTree from './handlers/share/getTree.ts'
 import getAlias from './handlers/share/getAlias.ts'
+import getBlockList from './handlers/blocklist/get.ts'
+import getBlockListForNginx from './handlers/blocklist/getBlockListForNginx.ts'
+import getBlockListOverview from './handlers/blocklist/getOverview.ts'
+import getRequestMetrics from './handlers/requests/getRequestMetrics.ts'
+import getRequestLogs from './handlers/requests/getLog.ts'
+import postBlockList from './handlers/blocklist/post.ts'
+import editBlockList from './handlers/blocklist/put.ts'
+import deleteBlocklist from './handlers/blocklist/delete.ts'
+import postRequest from './handlers/blocklist/postLog.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index
@@ -42,6 +51,19 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
 
     // words
     fastify.get('/words', getWords)
+
+    // blocklist
+    fastify.get('/blocklist', getBlockList)
+    fastify.get('/blocklist/overview', getBlockListOverview)
+    fastify.get('/blocklist/nginx', getBlockListForNginx)
+    fastify.post('/blocklist', postBlockList)
+    fastify.put('/blocklist/:id', editBlockList)
+    fastify.delete('/blocklist/:id', deleteBlocklist)
+
+    // requests
+    fastify.get('/traffic/recent', getRequestLogs)
+    fastify.get('/traffic/summary', getRequestMetrics)
+    fastify.post('/traffic', postRequest)
 
     // robots.txt
     fastify.get('/robots.txt', async (_, reply) => {
