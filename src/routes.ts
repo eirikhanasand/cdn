@@ -43,6 +43,7 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     // words
     fastify.get('/words', getWords)
 
+    // robots.txt
     fastify.get('/robots.txt', async (_, reply) => {
         const disallowedPaths = [
             "/files",
