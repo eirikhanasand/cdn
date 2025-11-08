@@ -27,6 +27,19 @@ fastify.register(websocketPlugin)
 fastify.register(ws, { prefix: "/api" })
 fastify.register(routes, { prefix: "/api" })
 fastify.get('/', getIndex)
+fastify.get('/robots.txt', async (_, reply) => {
+    const disallowedPaths = [
+        "/files",
+        "/share",
+        "/link",
+        "/words"
+    ]
+    let content = "User-agent: *\n"
+    disallowedPaths.forEach(path => {
+        content += `Disallow: ${path}\n`
+    })
+    reply.type('text/plain').send(content)
+})
 
 async function start() {
     try {

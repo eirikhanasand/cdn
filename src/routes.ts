@@ -64,19 +64,4 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     fastify.get('/traffic/recent', getRequestLogs)
     fastify.get('/traffic/summary', getRequestMetrics)
     fastify.post('/traffic', postRequest)
-
-    // robots.txt
-    fastify.get('/robots.txt', async (_, reply) => {
-        const disallowedPaths = [
-            "/files",
-            "/share",
-            "/link",
-            "/words"
-        ]
-        let content = "User-agent: *\n"
-        disallowedPaths.forEach(path => {
-            content += `Disallow: ${path}\n`
-        })
-        reply.type('text/plain').send(content)
-    })
 }
