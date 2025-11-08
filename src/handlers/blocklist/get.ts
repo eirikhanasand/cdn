@@ -4,10 +4,6 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 export default async function getBlockList(req: FastifyRequest, res: FastifyReply) {
     try {
         const { metric, value } = req.query as { metric?: string; value?: string }
-        if (!metric && !value) {
-            return res.status(400).send({ error: 'Missing query parameters: metric or value required' })
-        }
-
         const conditions: string[] = []
         const params: any[] = []
 
