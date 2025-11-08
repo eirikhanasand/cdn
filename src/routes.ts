@@ -42,4 +42,18 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
 
     // words
     fastify.get('/words', getWords)
+
+    fastify.get('/robots.txt', async (_, reply) => {
+        const disallowedPaths = [
+            "/files",
+            "/share",
+            "/link",
+            "/words"
+        ]
+        let content = "User-agent: *\n"
+        disallowedPaths.forEach(path => {
+            content += `Disallow: ${path}\n`
+        })
+        reply.type('text/plain').send(content)
+    })
 }
