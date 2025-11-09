@@ -6,12 +6,15 @@ export default async function getBlockListOverview(_: FastifyRequest, res: Fasti
         const query = `
             SELECT 
                 id,
-                metric AS type,
-                value,
-                hits,
+                domain,
+                ip,
+                user_agent,
                 path,
-                last_seen,
-                created_at
+                method,
+                referer,
+                hits,
+                first_seen,
+                last_seen
             FROM request_logs
             ORDER BY last_seen DESC
             LIMIT 100
@@ -20,21 +23,25 @@ export default async function getBlockListOverview(_: FastifyRequest, res: Fasti
         const result = await run(query)
 
         if (!result || !result.rowCount) {
-            return res.status(404).send({ error: 'No blocklist entries found' })
+            return res.status(404).send({ error: 'No request logs found' })
         }
 
         const overview = result.rows.map(row => ({
-            type: row.type,
-            value: row.value,
-            hits: row.hits,
+            id: row.id,
+            domain: row.domain,
+            ip: row.ip,
+            user_agent: row.user_agent,
             path: row.path,
-            last_seen: row.last_seen,
-            created_at: row.created_at
+            method: row.method,
+            referer: row.referer,
+            hits: row.hits,
+            first_seen: row.first_seen,
+            last_seen: row.last_seen
         }))
 
         return res.status(200).send(overview)
     } catch (error) {
-        console.error(`Error fetching blocklist overview: ${error}`)
-        return res.status(500).send({ error: 'Failed to fetch blocklist overview' })
+        console.error(`Error fetching request log overview:`, error)
+        return res.status(500).send({ error: 'Failed to fetch request log overview' })
     }
 }
