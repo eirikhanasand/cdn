@@ -27,13 +27,13 @@ export default async function putShare(req: FastifyRequest, res: FastifyReply) {
         }
 
         const query = `
-        UPDATE shares
-        SET
-            path = COALESCE($2, path),
-            content = COALESCE($3, content),
-            name = COALESCE($4, name)
-        WHERE id = $1
-        RETURNING *
+            UPDATE shares
+            SET
+                path = COALESCE($2, path),
+                content = COALESCE($3, content),
+                name = COALESCE($4, name)
+            WHERE id = $1
+            RETURNING *
         `
         const result = await run(query, [id, path || null, content, name || null])
 
