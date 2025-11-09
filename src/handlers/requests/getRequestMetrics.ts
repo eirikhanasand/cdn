@@ -12,9 +12,9 @@ export default async function getRequestMetrics(req: FastifyRequest, res: Fastif
         const query = `
             SELECT 
                 ${metric} AS value,
-                COUNT(*) FILTER (WHERE last_seen >= NOW() - INTERVAL '1 day') AS hits_today,
-                COUNT(*) FILTER (WHERE last_seen >= NOW() - INTERVAL '7 day') AS hits_last_week,
-                COUNT(*) AS hits_total
+                SUM(hits) FILTER (WHERE last_seen >= NOW() - INTERVAL '1 day') AS hits_today,
+                SUM(hits) FILTER (WHERE last_seen >= NOW() - INTERVAL '7 day') AS hits_last_week,
+                SUM(hits) AS hits_total
             FROM request_logs
             GROUP BY ${metric}
             ORDER BY hits_today DESC
