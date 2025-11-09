@@ -5,6 +5,7 @@ export default async function getBlockListOverview(_: FastifyRequest, res: Fasti
     try {
         const query = `
             SELECT 
+                id,
                 metric AS type,
                 value,
                 hits,
