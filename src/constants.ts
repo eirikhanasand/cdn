@@ -38,7 +38,7 @@ const config = {
     CACHE_TTL: 30000,
     api: 'https://api.hanasand.com/api',
     internal_api: 'https://internal.hanasand.com/api',
-    internal_wss: 'wss://internal.hanasand.com/api',
+    internal_wss: 'wss://internal.hanasand.com/api/ws',
     vm_token: env.VM_TOKEN,
     vm_api_token: env.VM_API_TOKEN
 }

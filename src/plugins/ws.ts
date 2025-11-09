@@ -11,7 +11,7 @@ import run from '#db'
 
 export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
     fastify.register(async function (fastify) {
-        fastify.get('/api/share/ws/:id', { websocket: true }, (connection, req: FastifyRequest) => {
+        fastify.get('/api/ws/share/:id', { websocket: true }, (connection, req: FastifyRequest) => {
             const id = (req.params as { id: string }).id
 
             registerClient(id, connection)
@@ -28,7 +28,7 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
             })
         })
 
-        fastify.get('/api/share/ws/:name/shell/:user/:id', { websocket: true }, async (connection, req: FastifyRequest) => {
+        fastify.get('/api/ws/share/:name/shell/:user/:id', { websocket: true }, async (connection, req: FastifyRequest) => {
             try {
                 const { id, name, user } = (req.params as { id: string, name: string, user: string })
                 registerClient(id, connection)
