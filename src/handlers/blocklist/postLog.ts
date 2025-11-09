@@ -1,23 +1,49 @@
 import run from '#db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
+type PostRequestProps = {
+    domain: string
+    ip: string
+    user_agent: string
+    path?: string
+    method?: string
+    referer?: string
+}
+
 export default async function postRequest(req: FastifyRequest, res: FastifyReply) {
     try {
-        const { metric, value, path } = req.body as { metric: 'ip' | 'user_agent'; value: string; path?: string }
-        if (!metric || !value) {
-            return res.status(400).send({ error: 'Missing metric or value' })
+        const {
+            domain,
+            ip,
+            user_agent,
+            path,
+            method,
+            referer,
+        } = req.body as PostRequestProps ?? {}
+
+        if (!domain || !ip || !user_agent) {
+            return res.status(400).send({ error: 'Missing domain, ip, or user_agent' })
         }
 
         const logPath = path || '/'
+        const logMethod = method || 'GET'
 
         const query = `
-            INSERT INTO request_logs (metric, value, path)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (metric, value, path)
+            INSERT INTO request_logs (domain, ip, user_agent, path, method, referer)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (domain, ip, user_agent, path)
             DO UPDATE SET hits = request_logs.hits + 1, last_seen = NOW()
             RETURNING *
         `
-        const result = await run(query, [metric, value, logPath])
+
+        const result = await run(query, [
+            domain,
+            ip,
+            user_agent,
+            logPath,
+            logMethod,
+            referer || null,
+        ])
 
         return res.status(201).send(result.rows[0])
     } catch (error) {

@@ -86,13 +86,15 @@ CREATE TABLE IF NOT EXISTS blocklist (
 -- Request logs for DDoS
 CREATE TABLE IF NOT EXISTS request_logs (
     id SERIAL PRIMARY KEY,
-    metric TEXT NOT NULL CHECK (metric IN ('ip', 'user_agent')),
-    value TEXT NOT NULL,
+    domain TEXT NOT NULL,
+    ip INET NOT NULL,
+    user_agent TEXT NOT NULL,
     path TEXT NOT NULL DEFAULT '/',
+    method TEXT NOT NULL DEFAULT 'GET',
+    referer TEXT,
     hits INT DEFAULT 1,
-    last_seen TIMESTAMPTZ DEFAULT NOW(),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    CONSTRAINT unique_metric_path UNIQUE(metric, value, path)
+    first_seen TIMESTAMPTZ DEFAULT NOW(),
+    last_seen TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Updates updated at when insert happens
