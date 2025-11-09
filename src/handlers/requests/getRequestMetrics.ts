@@ -11,7 +11,6 @@ export default async function getRequestMetrics(req: FastifyRequest, res: Fastif
 
         const query = `
             SELECT 
-                id,
                 ${metric} AS value,
                 COUNT(*) FILTER (WHERE last_seen >= NOW() - INTERVAL '1 day') AS hits_today,
                 COUNT(*) FILTER (WHERE last_seen >= NOW() - INTERVAL '7 day') AS hits_last_week,
