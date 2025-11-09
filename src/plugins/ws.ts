@@ -5,6 +5,7 @@ import removeClient from '#utils/ws/removeClient.ts'
 import handleShareMessage from '#utils/ws/handleShareMessage.ts'
 import handleTerminalMessage from '#utils/ws/handleTerminalMessage.ts'
 import followShell from '#utils/ws/followShell.ts'
+import run from '#db'
 // import run from '#db'
 // import { loadSQL } from '#utils/loadSQL.ts'
 
@@ -62,6 +63,46 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
             } catch (error) {
                 connection.send(Buffer.from(JSON.stringify(error)))
                 console.log(error)
+            }
+        })
+
+        fastify.get('/api/ws/tps/:id', { websocket: true }, async (connection, req: FastifyRequest) => {
+            const { id } = (req.params as { id: string })
+            registerClient(id, connection)
+
+            try {
+                const interval = setInterval(async () => {
+                    try {
+                        const query = `
+                            SELECT domain, SUM(hits) AS hits
+                            FROM request_logs
+                            GROUP BY domain
+                            ORDER BY domain
+                        `
+                        const result = await run(query)
+                        const domains = result.rows.map((row) => ({
+                            name: row.domain,
+                            tps: Number(row.hits),
+                        }))
+                        connection.send(JSON.stringify({ domains }))
+                    } catch (err) {
+                        console.error('Error fetching domain TPS:', err)
+                    }
+                }, 500)
+
+                connection.on('close', () => {
+                    clearInterval(interval)
+                    removeClient(id, connection)
+                })
+
+                connection.on('error', (err) => {
+                    clearInterval(interval)
+                    removeClient(id, connection)
+                    console.log(`WebSocket error: ${err}`)
+                })
+            } catch (error) {
+                console.error('WebSocket setup error:', error)
+                connection.send(JSON.stringify({ error: 'Failed to start domain TPS websocket' }))
             }
         })
     })

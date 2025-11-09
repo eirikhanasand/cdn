@@ -24,6 +24,9 @@ import postBlockList from './handlers/blocklist/post.ts'
 import editBlockList from './handlers/blocklist/put.ts'
 import deleteBlocklist from './handlers/blocklist/delete.ts'
 import postRequest from './handlers/blocklist/postLog.ts'
+import getIPMetrics from './handlers/blocklist/getIPMetrics.ts'
+import getUAMetrics from './handlers/blocklist/getUAMetrics.ts'
+import getDomainTPS from './handlers/blocklist/getDomainTPS.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index
@@ -61,6 +64,9 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     fastify.delete('/blocklist/:id', deleteBlocklist)
 
     // requests
+    fastify.get('/traffic/domains', getDomainTPS)
+    fastify.get('/traffic/ips', getIPMetrics)
+    fastify.get('/traffic/uas', getUAMetrics)
     fastify.get('/traffic/recent', getRequestLogs)
     fastify.get('/traffic/summary', getRequestMetrics)
     fastify.post('/traffic', postRequest)
