@@ -8,10 +8,11 @@ export default async function getBlockListOverview(_: FastifyRequest, res: Fasti
                 metric AS type,
                 value,
                 hits,
-                created_at,
-                updated_at
-            FROM blocklist
-            ORDER BY created_at DESC
+                path,
+                last_seen,
+                created_at
+            FROM request_logs
+            ORDER BY last_seen DESC
             LIMIT 100
         `
 
@@ -25,8 +26,9 @@ export default async function getBlockListOverview(_: FastifyRequest, res: Fasti
             type: row.type,
             value: row.value,
             hits: row.hits,
-            created_at: row.created_at,
-            updated_at: row.updated_at
+            path: row.path,
+            last_seen: row.last_seen,
+            created_at: row.created_at
         }))
 
         return res.status(200).send(overview)
