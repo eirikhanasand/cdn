@@ -19,7 +19,7 @@ export default async function getRequestMetrics(req: FastifyRequest, res: Fastif
             FROM request_logs
             GROUP BY ${metric}
             ORDER BY hits_today DESC
-            LIMIT 100
+            LIMIT 3
         `
 
         const result = await run(query)
