@@ -5,6 +5,8 @@ dotenv.config()
 const requiredEnvironmentVariables = [
     'DB_PASSWORD',
     'DB_HOST',
+    'VM_TOKEN',
+    'VM_API_TOKEN'
 ]
 
 const missingVariables = requiredEnvironmentVariables.filter(
@@ -35,7 +37,10 @@ const config = {
     DB_PASSWORD: env.DB_PASSWORD,
     CACHE_TTL: 30000,
     api: 'https://api.hanasand.com/api',
+    internal_api: 'https://internal.hanasand.com/api',
     internal_wss: 'wss://internal.hanasand.com/api',
+    vm_token: env.VM_TOKEN,
+    vm_api_token: env.VM_API_TOKEN
 }
 
 export default config

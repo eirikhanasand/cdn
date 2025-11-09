@@ -2,6 +2,7 @@ import { WebSocket } from 'ws'
 import config from '#constants'
 import removeClient from './removeClient.ts'
 import registerClient from './registerClient.ts'
+import updateVM from '../vm/getVMInternals.ts'
 
 export const shellClients = new Map<string, Set<WebSocket>>()
 const messageBuffer: Buffer[] = []
@@ -14,6 +15,7 @@ export default function followShell(connection: WebSocket, id: string, name: str
             }
         })
 
+        updateVM(name)
         registerClient(id, connection, shellClients)
 
         internalWs.on('message', (msg) => {
