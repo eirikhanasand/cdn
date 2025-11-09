@@ -4,7 +4,6 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 export default async function postBlockList(req: FastifyRequest, res: FastifyReply) {
     try {
         const { metric, value } = req.body as { metric?: string; value?: string }
-
         if (!metric || !value) {
             return res.status(400).send({ error: 'Both metric and value are required' })
         }
