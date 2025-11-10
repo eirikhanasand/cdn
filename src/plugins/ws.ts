@@ -77,11 +77,11 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                             SELECT
                                 domain,
                                 SUM(hits) AS hits,
-                                SUM(hits) / 0.5 AS tps  -- divide by 0.5s
+                                SUM(hits) / 30.0 AS tps
                             FROM request_logs
-                            WHERE last_seen >= NOW() - INTERVAL '500 milliseconds'
+                            WHERE last_seen >= NOW() - INTERVAL '30 seconds'
                             GROUP BY domain
-                            ORDER BY domain
+                            ORDER BY domain;
                         `
                         let result = await run(realTimeQuery)
 
