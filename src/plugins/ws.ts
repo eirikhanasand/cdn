@@ -84,7 +84,7 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                             name: row.domain,
                             tps: Number(row.hits),
                         }))
-                        connection.send(JSON.stringify({ domains }))
+                        connection.send(JSON.stringify(domains))
                     } catch (err) {
                         console.error('Error fetching domain TPS:', err)
                     }
