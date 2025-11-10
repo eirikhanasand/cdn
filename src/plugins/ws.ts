@@ -67,23 +67,53 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
         })
 
         fastify.get('/api/ws/tps/:id', { websocket: true }, async (connection, req: FastifyRequest) => {
-            const { id } = (req.params as { id: string })
+            const { id } = req.params as { id: string }
             registerClient(id, connection)
 
             try {
                 const interval = setInterval(async () => {
                     try {
-                        const query = `
-                            SELECT domain, SUM(hits) AS hits
+                        const realTimeQuery = `
+                            SELECT
+                                domain,
+                                SUM(hits) AS hits,
+                                SUM(hits) / 0.5 AS tps  -- divide by 0.5s
                             FROM request_logs
+                            WHERE last_seen >= NOW() - INTERVAL '500 milliseconds'
                             GROUP BY domain
                             ORDER BY domain
                         `
-                        const result = await run(query)
-                        const domains = result.rows.map((row) => ({
+                        let result = await run(realTimeQuery)
+
+                        const domains = result.rows.map(row => ({
                             name: row.domain,
-                            tps: Number(row.hits),
+                            hits: Number(row.hits),
+                            tps: Number(row.tps),
                         }))
+
+                        const lowTrafficDomains = domains.filter(d => d.tps < 3)
+                        if (lowTrafficDomains.length > 0) {
+                            const names = lowTrafficDomains.map(d => `'${d.name}'`).join(',')
+                            const fallbackQuery = `
+                                SELECT
+                                    domain,
+                                    SUM(hits) AS hits,
+                                    SUM(hits) / 30.0 AS tps  -- aggregate over last 30 seconds
+                                FROM request_logs
+                                WHERE last_seen >= NOW() - INTERVAL '30 seconds'
+                                AND domain IN (${names})
+                                GROUP BY domain
+                            `
+                            const fallbackResult = await run(fallbackQuery)
+                            fallbackResult.rows.forEach(row => {
+                                const idx = domains.findIndex(d => d.name === row.domain)
+                                if (idx >= 0) {
+                                    domains[idx].hits = Number(row.hits)
+                                    domains[idx].tps = Number(row.tps)
+                                }
+                            })
+                        }
+
                         connection.send(JSON.stringify(domains))
                     } catch (err) {
                         console.error('Error fetching domain TPS:', err)
@@ -105,5 +135,6 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                 connection.send(JSON.stringify({ error: 'Failed to start domain TPS websocket' }))
             }
         })
+
     })
 })
