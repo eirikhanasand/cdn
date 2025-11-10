@@ -13,9 +13,8 @@ export default async function getDomainTPS(req: FastifyRequest<{ Querystring: Qu
         let intervalSeconds: number | null = null
 
         if (!range) {
-            // Default: real-time TPS over last 1 second
-            whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 second'`
-            intervalSeconds = 1
+            whereClause = `WHERE last_seen >= NOW() - INTERVAL '30 seconds'`
+            intervalSeconds = 30
         } else {
             switch (range) {
                 case 'day':
@@ -39,8 +38,8 @@ export default async function getDomainTPS(req: FastifyRequest<{ Querystring: Qu
                     intervalSeconds = null
                     break
                 default:
-                    whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 second'`
-                    intervalSeconds = 1
+                    whereClause = `WHERE last_seen >= NOW() - INTERVAL '30 seconds'`
+                    intervalSeconds = 30
             }
         }
 
