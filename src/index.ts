@@ -32,7 +32,27 @@ fastify.get('/robots.txt', async (_, reply) => {
         "/files",
         "/share",
         "/link",
-        "/words"
+        "/words",
+        "/blocklist",
+        "/traffic",
+        "/api/files",
+        "/api/share",
+        "/api/link",
+        "/api/words",
+        "/api/blocklist",
+        "/api/traffic",
+        "/files/*",
+        "/share/*",
+        "/link/*",
+        "/words/*",
+        "/blocklist/*",
+        "/traffic/*",
+        "/api/files/*",
+        "/api/share/*",
+        "/api/link/*",
+        "/api/words/*",
+        "/api/blocklist/*",
+        "/api/traffic/*",
     ]
     let content = "User-agent: *\n"
     disallowedPaths.forEach(path => {
