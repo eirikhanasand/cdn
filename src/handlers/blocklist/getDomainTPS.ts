@@ -13,24 +13,25 @@ export default async function getDomainTPS(req: FastifyRequest<{ Querystring: Qu
         let intervalSeconds: number | null = null
 
         if (!range) {
-            whereClause = `WHERE created_at >= NOW() - INTERVAL '1 second'`
+            // Default: real-time TPS over last 1 second
+            whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 second'`
             intervalSeconds = 1
         } else {
             switch (range) {
                 case 'day':
-                    whereClause = `WHERE created_at >= NOW() - INTERVAL '1 day'`
+                    whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 day'`
                     intervalSeconds = 86400
                     break
                 case 'week':
-                    whereClause = `WHERE created_at >= NOW() - INTERVAL '1 week'`
+                    whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 week'`
                     intervalSeconds = 604800
                     break
                 case 'month':
-                    whereClause = `WHERE created_at >= NOW() - INTERVAL '1 month'`
+                    whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 month'`
                     intervalSeconds = 2592000
                     break
                 case 'year':
-                    whereClause = `WHERE created_at >= NOW() - INTERVAL '1 year'`
+                    whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 year'`
                     intervalSeconds = 31536000
                     break
                 case 'all':
@@ -38,7 +39,7 @@ export default async function getDomainTPS(req: FastifyRequest<{ Querystring: Qu
                     intervalSeconds = null
                     break
                 default:
-                    whereClause = `WHERE created_at >= NOW() - INTERVAL '1 second'`
+                    whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 second'`
                     intervalSeconds = 1
             }
         }
@@ -46,11 +47,12 @@ export default async function getDomainTPS(req: FastifyRequest<{ Querystring: Qu
         const query = `
             SELECT
                 domain,
-                COUNT(*) AS hits,
-                ${intervalSeconds
-                        ? `COUNT(*) / ${intervalSeconds} AS tps`
-                        : `COUNT(*) / EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) AS tps`
-                    }
+                SUM(hits) AS hits,
+                ${
+                    intervalSeconds
+                        ? `SUM(hits) / ${intervalSeconds} AS tps`
+                        : `SUM(hits) / GREATEST(EXTRACT(EPOCH FROM (MAX(last_seen) - MIN(first_seen))), 1) AS tps`
+                }
             FROM request_logs
             ${whereClause}
             GROUP BY domain

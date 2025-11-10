@@ -119,3 +119,5 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_alias ON shares(alias);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_type ON shares(type);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_locked ON shares(locked);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_vms ON vms(vm_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_last_seen ON request_logs(last_seen);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_domain ON request_logs(domain);
