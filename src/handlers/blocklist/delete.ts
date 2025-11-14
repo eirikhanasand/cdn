@@ -1,8 +1,23 @@
 import run from '#db'
+import hasRole from '#utils/auth/hasRole.ts'
+import permissionsWrapper from '#utils/auth/permissionsWrapper.ts'
+import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function deleteBlocklist(req: FastifyRequest, res: FastifyReply) {
     try {
+        const user: string = req.headers['id'] as string || ''
+        const token = req.headers['authorization'] || ''
+        const { status, id: userId } = await tokenWrapper(user, token)
+        if (!status || !userId) {
+            return res.status(400).send({ error: 'Unauthorized' })
+        }
+
+        const allowed = await hasRole({ id: userId, role: 'system_admin' })
+        if (!allowed) {
+            return res.status(400).send({ error: 'Unauthorized' })
+        }
+
         const { id } = req.params as { id: string }
 
         if (!id) {

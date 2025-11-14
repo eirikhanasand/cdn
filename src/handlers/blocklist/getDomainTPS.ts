@@ -7,7 +7,7 @@ type Query = {
 
 export default async function getDomainTPS(req: FastifyRequest<{ Querystring: Query }>, res: FastifyReply) {
     try {
-        const { range } = req.query || {}
+        const { range } = req.query ?? {}
 
         let whereClause = ''
         let intervalSeconds: number | null = null

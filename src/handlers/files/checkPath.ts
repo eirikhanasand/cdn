@@ -3,7 +3,6 @@ import run from '#utils/db.ts'
 
 export default async function checkPath(req: FastifyRequest, res: FastifyReply) {
     const { path } = req.query as { path: string }
-
     if (!path) {
         return res.status(400).send({ error: "Path query parameter is required" })
     }

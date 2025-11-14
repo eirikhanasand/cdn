@@ -14,7 +14,6 @@ import putLink from './handlers/links/put.ts'
 import postLink from './handlers/links/post.ts'
 import getWords from './handlers/words/get.ts'
 import getTree from './handlers/share/getTree.ts'
-import getAlias from './handlers/share/getAlias.ts'
 import getBlockList from './handlers/blocklist/get.ts'
 import getBlockListForNginx from './handlers/blocklist/getBlockListForNginx.ts'
 import getBlockListOverview from './handlers/blocklist/getBlocklistOverview.ts'
@@ -27,6 +26,27 @@ import postRequest from './handlers/blocklist/postLog.ts'
 import getIPMetrics from './handlers/blocklist/getIPMetrics.ts'
 import getUAMetrics from './handlers/blocklist/getUAMetrics.ts'
 import getDomainTPS from './handlers/blocklist/getDomainTPS.ts'
+import lockShare from './handlers/share/lock.ts'
+import unlockShare from './handlers/share/unlock.ts'
+import getProject from './handlers/project/get.ts'
+import lockProject from './handlers/project/lock.ts'
+import unlockProject from './handlers/project/unlock.ts'
+import deleteProject from './handlers/project/delete.ts'
+import getUserShares from './handlers/share/getUserShares.ts'
+import getUserProjects from './handlers/project/getUserProjects.ts'
+import getShareEditors from './handlers/share/getShareEditors.ts'
+import getProjectEditors from './handlers/project/getProjectEditors.ts'
+import addProjectEditors from './handlers/project/addProjectEditors.ts'
+import addShareEditors from './handlers/share/addShareEditors.ts'
+import removeProjectEditors from './handlers/project/removeProjectEditors.ts'
+import removeShareEditors from './handlers/share/removeShareEditors.ts'
+import listProjectsInGroup from './handlers/project/groups/get.ts'
+import addProjectsToGroup from './handlers/project/groups/addProjectToGroup.ts'
+import removeProjectsFromGroup from './handlers/project/groups/removeProjectFromGroup.ts'
+import deleteProjectGroup from './handlers/project/groups/deleteGroup.ts'
+import listGroupsByOwner from './handlers/project/groups/listGroupsByOwner.ts'
+import listGroupsByEditor from './handlers/project/groups/listGroupsByEditor.ts'
+import createProjectGroup from './handlers/project/groups/post.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index
@@ -43,9 +63,33 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     // share
     fastify.get("/share/:id", getShare)
     fastify.get("/share/tree/:id", getTree)
-    fastify.get("/share/alias/:alias", getAlias)
+    fastify.get('/share/user/:id', getUserShares)
+    fastify.get('/share/editors/:id', getShareEditors)
+    fastify.get('/share/editors/add/:id', addShareEditors)
+    fastify.get('/share/editors/remove/:id', removeShareEditors)
+    fastify.get('/share/lock/:id', lockShare)
+    fastify.get('/share/unlock/:id', unlockShare)
     fastify.put("/share/:id", putShare)
     fastify.post("/share/:id", postShare)
+    
+    // project
+    fastify.get("/project/:alias", getProject)
+    fastify.get('/project/user:id', getUserProjects)
+    fastify.get('/project/editors/add/:id', addProjectEditors)
+    fastify.get('/project/editors/remove/:id', removeProjectEditors)
+    fastify.get('/project/editors/:id', getProjectEditors)
+    fastify.get('/project/lock/:alias', lockProject)
+    fastify.get('/project/unlock/:alias', unlockProject)
+    fastify.delete('/project/:alias', deleteProject)
+
+    // project groups
+    fastify.get('/project/group/:id', listProjectsInGroup)
+    fastify.get('/project/group/owner/:id', listGroupsByOwner)
+    fastify.get('/project/group/editor/:id', listGroupsByEditor)
+    fastify.post('/project/group/:id', createProjectGroup)
+    fastify.post('/project/group/add/:id', addProjectsToGroup)
+    fastify.post('/project/group/remove/:id', removeProjectsFromGroup)
+    fastify.delete('/project/group/:id', deleteProjectGroup)
 
     // links
     fastify.get("/link/:id", getLink)

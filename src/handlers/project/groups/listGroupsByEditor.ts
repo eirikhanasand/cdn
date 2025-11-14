@@ -1,0 +1,39 @@
+import run from '#db'
+import projectPermissionsWrapper from '#utils/auth/projectPermissionsWrapper.ts'
+import tokenWrapper from '#utils/auth/tokenWrapper.ts'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+
+export default async function listGroupsByEditor(req: FastifyRequest, res: FastifyReply) {
+    const { id } = req.params as { id: string }
+    if (!id) {
+        return res.status(400).send({ error: 'id is required' })
+    }
+
+    const user: string = req.headers['id'] as string || ''
+    const token = req.headers['authorization'] || ''
+    const { status, id: userId } = await tokenWrapper(user, token)
+    if (!status || !userId) {
+        return res.status(400).send({ error: 'Unauthorized' })
+    }
+
+    const allowed = await projectPermissionsWrapper({ userId, projectId: id })
+    if (!allowed.status) {
+        return res.status(400).send({ error: 'Unauthorized' })
+    }
+
+    try {
+        const query = `
+            SELECT DISTINCT g.*
+            FROM project_groups g
+            JOIN project_group_members m ON g.id = m.group_id
+            JOIN shares s ON s.id = m.share_id
+            WHERE $1 = ANY(s.editors)
+            ORDER BY g.created_at DESC
+        `
+        const result = await run(query, [id])
+        return res.status(200).send(result.rows)
+    } catch (err) {
+        console.error('Failed to list groups by editor', err)
+        return res.status(500).send({ error: 'Failed to list groups' })
+    }
+}

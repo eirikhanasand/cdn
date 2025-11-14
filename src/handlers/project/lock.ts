@@ -1,0 +1,41 @@
+import run from '#db'
+import projectPermissionsWrapper from '#utils/auth/projectPermissionsWrapper.ts'
+import tokenWrapper from '#utils/auth/tokenWrapper.ts'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+
+export default async function lockProject(req: FastifyRequest, res: FastifyReply) {
+    const { alias } = req.params as { alias: string }
+    if (!alias) {
+        return res.status(400).send({ error: 'Missing alias.' })
+    }
+
+    const user: string = req.headers['id'] as string || ''
+    const token = req.headers['authorization'] || ''
+    const { status, id: userId } = await tokenWrapper(user, token)
+    if (!status || !userId) {
+        return res.status(400).send({ error: 'Unauthorized' })
+    }
+
+    const allowed = await projectPermissionsWrapper({ userId, projectId: alias })
+    if (!allowed.status) {
+        return res.status(400).send({ error: 'Unauthorized' })
+    }
+
+    try {
+        const query = `
+            UPDATE shares
+            SET locked = TRUE
+            WHERE alias = $1
+            RETURNING *
+        `
+        const result = await run(query, [alias])
+        if (!result || result.rowCount === 0) {
+            return res.status(404).send({ error: `Project ${alias} not found` })
+        }
+
+        return res.status(200).send(result.rows[0])
+    } catch (error) {
+        console.log(`Error locking project: ${error}`)
+        return res.status(500).send({ error: 'Failed to lock project' })
+    }
+}

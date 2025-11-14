@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import run from '#utils/db.ts'
 import tokenWrapper from '#utils/auth/tokenWrapper.ts'
+import filePermissionsWrapper from '#utils/auth/filePermissionsWrapper.ts'
 
 type PutFileProps = {
     name?: string
@@ -13,8 +14,14 @@ type PutFileProps = {
 export default async function putFile(req: FastifyRequest, res: FastifyReply) {
     const { id } = req.params as { id: string }
     const { name, description, data, path, type } = req.body as PutFileProps
+    const user: string = req.headers['id'] as string || ''
+    const token = req.headers['authorization'] || ''
+    const { status, id: userId } = await tokenWrapper(user, token)
+    if (!status || !userId) {
+        return res.status(400).send({ error: 'Unauthorized' })
+    }
 
-    const allowed = await tokenWrapper(id, (req.headers['authorization'] || ''))
+    const allowed = await filePermissionsWrapper({ userId, fileId: id })
     if (!allowed.status) {
         return res.status(400).send({ error: 'Unauthorized' })
     }

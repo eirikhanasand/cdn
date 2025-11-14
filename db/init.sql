@@ -46,6 +46,21 @@ CREATE TABLE IF NOT EXISTS shares (
     timestamp TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS project_groups (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    owner TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS project_group_members (
+    group_id TEXT NOT NULL REFERENCES project_groups(id) ON DELETE CASCADE,
+    share_id TEXT NOT NULL REFERENCES shares(id) ON DELETE CASCADE,
+    role TEXT,
+    PRIMARY KEY (group_id, share_id)
+);
+
 -- Links
 CREATE TABLE IF NOT EXISTS links (
     id TEXT PRIMARY KEY,
@@ -114,10 +129,12 @@ EXECUTE FUNCTION update_updated_at_column();
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_files_path ON files(path);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_path ON shares(path);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_path ON shares(parent);
+CREATE INDEX IF NOT EXISTS idx_shares_path ON shares(parent);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_alias ON shares(alias);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_type ON shares(type);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_locked ON shares(locked);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_vms ON vms(vm_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_last_seen ON request_logs(last_seen);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_domain ON request_logs(domain);
+CREATE INDEX IF NOT EXISTS idx_project_group_members_group ON project_group_members(group_id);
+CREATE INDEX IF NOT EXISTS idx_project_group_members_share ON project_group_members(share_id);

@@ -1,4 +1,6 @@
 import run from '#db'
+import hasRole from '#utils/auth/hasRole.ts'
+import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 type TopPath = {
@@ -12,9 +14,20 @@ type IPMetrics = {
     most_common_user_agent: string | null
 }
 
-export default async function getIPMetrics(_: FastifyRequest, res: FastifyReply) {
+export default async function getIPMetrics(req: FastifyRequest, res: FastifyReply) {
     try {
-        // Get top 5 IPs by total hits
+        const user: string = req.headers['id'] as string || ''
+        const token = req.headers['authorization'] || ''
+        const { status, id: userId } = await tokenWrapper(user, token)
+        if (!status || !userId) {
+            return res.status(400).send({ error: 'Unauthorized' })
+        }
+
+        const allowed = await hasRole({ id: userId, role: 'system_admin' })
+        if (!allowed) {
+            return res.status(400).send({ error: 'Unauthorized' })
+        }
+
         const topIpsQuery = `
             SELECT ip, SUM(hits) AS total_hits
             FROM request_logs
@@ -32,7 +45,6 @@ export default async function getIPMetrics(_: FastifyRequest, res: FastifyReply)
         const results: IPMetrics[] = []
 
         for (const ip of ips) {
-            // Top 3 paths for this IP
             const topPathsQuery = `
                 SELECT path, SUM(hits) AS hits
                 FROM request_logs
@@ -47,7 +59,6 @@ export default async function getIPMetrics(_: FastifyRequest, res: FastifyReply)
                 hits: Number(row.hits)
             }))
 
-            // Most common user agent for this IP
             const topUaQuery = `
                 SELECT user_agent, SUM(hits) AS hits
                 FROM request_logs
