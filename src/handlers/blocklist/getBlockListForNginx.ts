@@ -19,7 +19,6 @@ export default async function getBlockListForNginx(req: FastifyRequest, res: Fas
 
         const query = `SELECT metric AS type, value FROM blocklist`
         const result = await run(query)
-
         if (!result || !result.rowCount) {
             return res.status(200).send([])
         }

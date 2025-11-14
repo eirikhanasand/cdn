@@ -40,9 +40,8 @@ export default async function getBlockListOverview(req: FastifyRequest, res: Fas
         `
 
         const result = await run(query)
-
         if (!result || !result.rowCount) {
-            return res.status(404).send({ error: 'No blocklist entries found' })
+            return res.status(200).send([])
         }
 
         const overview = result.rows.map(row => ({

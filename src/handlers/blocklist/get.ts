@@ -40,9 +40,8 @@ export default async function getBlockList(req: FastifyRequest, res: FastifyRepl
         `
 
         const result = await run(query, params)
-
         if (!result || !result.rowCount) {
-            return res.status(404).send({ error: 'No blocklist entries found' })
+            return res.status(200).send([])
         }
 
         return res.status(200).send(result.rows)

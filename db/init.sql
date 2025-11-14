@@ -138,3 +138,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_last_seen ON request_logs(las
 CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_domain ON request_logs(domain);
 CREATE INDEX IF NOT EXISTS idx_project_group_members_group ON project_group_members(group_id);
 CREATE INDEX IF NOT EXISTS idx_project_group_members_share ON project_group_members(share_id);
+SET work_mem = '512MB';
+SET max_parallel_workers_per_gather = 4;
+SET max_parallel_workers = 8;
