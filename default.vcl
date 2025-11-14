@@ -14,7 +14,7 @@ sub vcl_recv {
         return (pass);
     }
 
-    if (req.url ~ "^/api/(share|vm)(/.*)?$") {
+    if (req.url ~ "^/api/(share|vm|traffic/domains)(/.*)?$") {
         return (pass);
     }
 
