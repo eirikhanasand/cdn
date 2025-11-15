@@ -27,6 +27,13 @@ const port = Number(process.env.PORT) || 8081
 fastify.decorate('cachedIPMetrics', { status: 200, data: Buffer.from([]) })
 fastify.decorate('cachedUAMetrics', { status: 200, data: Buffer.from([]) })
 fastify.decorate('cachedTPS', { status: 200, data: Buffer.from([]) })
+fastify.decorate('cachedSummary', {
+    status: 200, data: {
+        path: Buffer.from([]),
+        ip: Buffer.from([]),
+        user_agent: Buffer.from([])
+    }
+})
 
 fastify.register(fp)
 fastify.register(websocketPlugin)
