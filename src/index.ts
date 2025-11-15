@@ -24,9 +24,9 @@ fastify.register(cors, {
 
 const port = Number(process.env.PORT) || 8081
 
-fastify.decorate('cachedIPMetrics', { status: 500, data: Buffer.from('') })
-fastify.decorate('cachedUAMetrics', { status: 500, data: Buffer.from('') })
-fastify.decorate('cachedTPS', { status: 500, data: Buffer.from('') })
+fastify.decorate('cachedIPMetrics', { status: 200, data: Buffer.from([]) })
+fastify.decorate('cachedUAMetrics', { status: 200, data: Buffer.from([]) })
+fastify.decorate('cachedTPS', { status: 200, data: Buffer.from([]) })
 
 fastify.register(fp)
 fastify.register(websocketPlugin)
