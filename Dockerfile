@@ -7,23 +7,20 @@ RUN apk add --no-cache varnish
 # Sets the working directory
 WORKDIR /usr/src/app
 
-# Copies varnish
+# Copies contents
+COPY . .
 COPY ./entrypoint.sh /usr/src/app/entrypoint.sh
-
-# Copies varnish
 COPY ./default.vcl /etc/varnish/default.vcl
-
-# Copies package.json and package-lock.json to the Docker environment
 COPY package.json package-lock.json ./
+
+# Adds execute permissions to entrypoint script
+RUN chmod +x /usr/src/app/entrypoint.sh
 
 # Installs required dependencies
 RUN npm install
-
-# Copies contents
-COPY . .
 
 # Expose API port
 EXPOSE 8080
 
 # Start the application
-CMD  chmod +x /usr/src/app/entrypoint.sh; /usr/src/app/entrypoint.sh
+CMD /usr/src/app/entrypoint.sh

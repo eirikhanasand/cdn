@@ -143,7 +143,7 @@ EXECUTE FUNCTION update_updated_at_column();
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_files_path ON files(path);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_path ON shares(path);
-CREATE INDEX IF NOT EXISTS idx_shares_path ON shares(parent);
+CREATE INDEX IF NOT EXISTS idx_shares_parent ON shares(parent);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_alias ON shares(alias);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_type ON shares(type);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_locked ON shares(locked);
@@ -155,3 +155,12 @@ CREATE INDEX IF NOT EXISTS idx_project_group_members_share ON project_group_memb
 SET work_mem = '512MB';
 SET max_parallel_workers_per_gather = 4;
 SET max_parallel_workers = 8;
+
+CREATE MATERIALIZED VIEW request_logs_combined_mv AS
+SELECT * FROM request_logs_all
+UNION ALL
+SELECT * FROM request_logs;
+
+CREATE INDEX idx_combined_ip ON request_logs_combined_mv(ip);
+CREATE INDEX idx_combined_path ON request_logs_combined_mv(path);
+CREATE INDEX idx_combined_user_agent ON request_logs_combined_mv(user_agent);

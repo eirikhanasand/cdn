@@ -30,5 +30,20 @@ services:
       interval: 5s
       retries: 5
 
+  cdn_cron:
+    container_name: cdn_cron
+    image: alpine-base
+    build:
+      context: ./cron
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      DB_USER: cdn
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: cdn
+      DB_HOST: postgres
+    restart: always
+
 volumes:
   postgres_data:

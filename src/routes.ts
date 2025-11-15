@@ -25,7 +25,7 @@ import deleteBlocklist from './handlers/blocklist/delete.ts'
 import postRequest from './handlers/traffic/post.ts'
 import getIPMetrics from './handlers/traffic/getIPMetrics.ts'
 import getUAMetrics from './handlers/traffic/getUAMetrics.ts'
-import getDomainTPS from './handlers/traffic/getDomainTPS.ts'
+import getTPS from './handlers/traffic/getTPS.ts'
 import lockShare from './handlers/share/lock.ts'
 import unlockShare from './handlers/share/unlock.ts'
 import getProject from './handlers/project/get.ts'
@@ -108,7 +108,7 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     fastify.delete('/blocklist/:id', deleteBlocklist)
 
     // requests
-    fastify.get('/traffic/domains', getDomainTPS)
+    fastify.get('/traffic/tps', getTPS)
     fastify.get('/traffic/ips', getIPMetrics)
     fastify.get('/traffic/uas', getUAMetrics)
     fastify.get('/traffic/recent', getRequestLogs)

@@ -5,6 +5,7 @@ import getIndex from './handlers/index/get.ts'
 import websocketPlugin from '@fastify/websocket'
 import fastifyMultipart from '@fastify/multipart'
 import ws from './plugins/ws.ts'
+import fp from '#utils/refresh/fp.ts'
 
 const fastify = Fastify({
     logger: true
@@ -23,9 +24,15 @@ fastify.register(cors, {
 
 const port = Number(process.env.PORT) || 8081
 
+fastify.decorate('cachedIPMetrics', { status: 500, data: Buffer.from('') })
+fastify.decorate('cachedUAMetrics', { status: 500, data: Buffer.from('') })
+fastify.decorate('cachedTPS', { status: 500, data: Buffer.from('') })
+
+fastify.register(fp)
 fastify.register(websocketPlugin)
 fastify.register(ws, { prefix: "/api" })
 fastify.register(routes, { prefix: "/api" })
+
 fastify.get('/', getIndex)
 fastify.get('/robots.txt', async (_, reply) => {
     const disallowedPaths = [
@@ -70,8 +77,4 @@ async function start() {
     }
 }
 
-async function main() {
-    start()
-}
-
-main()
+start()
