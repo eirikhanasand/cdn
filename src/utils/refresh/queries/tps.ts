@@ -2,23 +2,13 @@ import run from '#db'
 
 export default async function tps() {
     try {
-        let whereClause = ''
-        let intervalSeconds: number | null = null
-
-        whereClause = `WHERE last_seen >= NOW() - INTERVAL '30 seconds'`
-        intervalSeconds = 30
-
         const query = `
             SELECT
                 domain,
                 SUM(hits) AS hits,
-                ${
-                    intervalSeconds
-                        ? `SUM(hits) / ${intervalSeconds} AS tps`
-                        : `SUM(hits) / GREATEST(EXTRACT(EPOCH FROM (MAX(last_seen) - MIN(first_seen))), 1) AS tps`
-                }
-            FROM request_logs_combined_mv
-            ${whereClause}
+                SUM(hits) /30 AS tps
+            FROM request_logs
+            WHERE last_seen >= NOW() - INTERVAL '30 seconds'
             GROUP BY domain
             ORDER BY domain
         `
