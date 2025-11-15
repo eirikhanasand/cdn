@@ -14,15 +14,8 @@ type PostRequestProps = {
 
 export default async function postRequest(req: FastifyRequest, res: FastifyReply) {
     try {
-        const user: string = req.headers['id'] as string || ''
-        const token = req.headers['authorization'] || ''
-        const { status, id: userId } = await tokenWrapper(user, token)
-        if (!status || !userId) {
-            return res.status(400).send({ error: 'Unauthorized' })
-        }
-
-        const allowed = await hasRole({ id: userId, role: 'system_admin' })
-        if (!allowed) {
+        const ua = req.headers['User-Agent'] || ''
+        if (!ua.toString().startsWith('Hanasand Traffic Logger')) {
             return res.status(400).send({ error: 'Unauthorized' })
         }
 
