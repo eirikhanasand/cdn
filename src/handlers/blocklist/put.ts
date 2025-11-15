@@ -3,7 +3,7 @@ import hasRole from '#utils/auth/hasRole.ts'
 import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
-export default async function editBlockList(req: FastifyRequest, res: FastifyReply) {
+export default async function putBlockList(req: FastifyRequest, res: FastifyReply) {
     try {
         const user: string = req.headers['id'] as string || ''
         const token = req.headers['authorization'] || ''
