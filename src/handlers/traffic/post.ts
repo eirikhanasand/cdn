@@ -15,7 +15,7 @@ type PostRequestProps = {
 export default async function postRequest(req: FastifyRequest, res: FastifyReply) {
     try {
         const ua = req.headers['user-agent'] || ''
-        console.log("ua", ua.toString().startsWith('Hanasand Traffic Logger'), ua)
+        console.log("ua", ua.toString().startsWith('Hanasand Traffic Logger'), '-', ua, '-')
         if (!ua.toString().startsWith('Hanasand Traffic Logger')) {
             return res.status(400).send({ error: 'Unauthorized' })
         }
