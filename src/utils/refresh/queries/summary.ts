@@ -23,7 +23,7 @@ function query(metric: string) {
             SUM(hits) FILTER (WHERE last_seen >= NOW() - INTERVAL '1 day') AS hits_today,
             SUM(hits) FILTER (WHERE last_seen >= NOW() - INTERVAL '7 day') AS hits_last_week,
             SUM(hits) AS hits_total
-        FROM request_logs
+        FROM request_logs_combined_mv
         GROUP BY ${metric}
         ORDER BY hits_today DESC
         LIMIT 5
