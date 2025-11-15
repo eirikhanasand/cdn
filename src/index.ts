@@ -24,11 +24,11 @@ fastify.register(cors, {
 
 const port = Number(process.env.PORT) || 8081
 
-fastify.decorate('cachedIPMetrics', { status: 200, data: Buffer.from(JSON.stringify([])) })
-fastify.decorate('cachedUAMetrics', { status: 200, data: Buffer.from(JSON.stringify([])) })
-fastify.decorate('cachedTPS', { status: 200, data: Buffer.from(JSON.stringify([])) })
+fastify.decorate('cachedIPMetrics', { status: 303, data: Buffer.from(JSON.stringify([])) })
+fastify.decorate('cachedUAMetrics', { status: 303, data: Buffer.from(JSON.stringify([])) })
+fastify.decorate('cachedTPS', { status: 303, data: Buffer.from(JSON.stringify([])) })
 fastify.decorate('cachedSummary', {
-    status: 200, data: {
+    status: 303, data: {
         path: Buffer.from(JSON.stringify([])),
         ip: Buffer.from(JSON.stringify([])),
         user_agent: Buffer.from(JSON.stringify([])),
