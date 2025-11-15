@@ -14,7 +14,7 @@ sub vcl_recv {
         return (pass);
     }
 
-    if (req.url ~ "^/api/(share|vm|traffic/tps)(/.*)?$") {
+    if (req.url ~ "^/api/(share|vm)(/.*)?$") {
         return (pass);
     }
 
@@ -41,9 +41,14 @@ sub vcl_hash {
 }
 
 sub vcl_backend_response {
-    # Caches for 1 hour
-    set beresp.http.Cache-Control = "hanasand-cache, max-age=3600";
-    set beresp.ttl = 1h;
+    if (bereq.url ~ "^/api/traffic/tps") {
+        set beresp.ttl = 1m;
+        set beresp.http.Cache-Control = "max-age=60";
+    } else {
+        set beresp.ttl = 1h;
+        set beresp.http.Cache-Control = "hanasand-cache, max-age=3600";
+    }
+
     return (deliver);
 }
 
