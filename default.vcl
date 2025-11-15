@@ -43,7 +43,7 @@ sub vcl_hash {
 sub vcl_backend_response {
     if (bereq.url ~ "^/api/traffic/tps") {
         set beresp.ttl = 1m;
-        set beresp.http.Cache-Control = "max-age=60";
+        set beresp.http.Cache-Control = "hanasand-cache, max-age=60";
     } else {
         set beresp.ttl = 1h;
         set beresp.http.Cache-Control = "hanasand-cache, max-age=3600";
