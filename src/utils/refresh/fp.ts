@@ -19,9 +19,9 @@ export default fp(async (fastify) => {
         fastify.cachedIPMetrics = { status: newIP.status, data: Buffer.from(JSON.stringify(newIP.data)) }
         fastify.cachedTPS = { status: newTPS.status, data: Buffer.from(JSON.stringify(newTPS.data)) }
         fastify.cachedSummary = { status: newSummary.status, data: { 
-            path: Buffer.from(newSummary.data.path || []), 
-            ip: Buffer.from(newSummary.data.ip || []), 
-            user_agent: Buffer.from(newSummary.data.ua || []), 
+            path: Buffer.from(newSummary.data.path || JSON.stringify([])), 
+            ip: Buffer.from(newSummary.data.ip || JSON.stringify([])), 
+            user_agent: Buffer.from(newSummary.data.ua || JSON.stringify([])), 
         } }
         fastify.log.info('Cached queries refreshed')
     }
