@@ -98,8 +98,22 @@ CREATE TABLE IF NOT EXISTS blocklist (
     CONSTRAINT unique_metric_value UNIQUE(metric, value)
 );
 
--- Request logs for DDoS
+-- Todays request logs
 CREATE TABLE IF NOT EXISTS request_logs (
+    id SERIAL PRIMARY KEY,
+    domain TEXT NOT NULL,
+    ip INET NOT NULL,
+    user_agent TEXT NOT NULL,
+    path TEXT NOT NULL DEFAULT '/',
+    method TEXT NOT NULL DEFAULT 'GET',
+    referer TEXT,
+    hits INT DEFAULT 1,
+    first_seen TIMESTAMPTZ DEFAULT NOW(),
+    last_seen TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- All request logs
+CREATE TABLE IF NOT EXISTS request_logs_all (
     id SERIAL PRIMARY KEY,
     domain TEXT NOT NULL,
     ip INET NOT NULL,
