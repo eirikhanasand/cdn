@@ -17,5 +17,5 @@ export default async function getUAMetrics(this: FastifyInstance, req: FastifyRe
     }
 
     const response = this.cachedUAMetrics
-    return res.status(response.status).type('application/json').send(response.data)
+    return res.status(response.status).send(response.data)
 }

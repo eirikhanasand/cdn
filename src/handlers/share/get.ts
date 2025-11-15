@@ -1,5 +1,5 @@
+import run from '#db'
 import estimateReadingTime from '#utils/estimateReadTime.ts'
-import queryShare from '#utils/share/queryShare.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function getShare(req: FastifyRequest, res: FastifyReply) {
@@ -9,9 +9,10 @@ export default async function getShare(req: FastifyRequest, res: FastifyReply) {
     }
 
     try {
-        const result = await queryShare(id)
-        if (result === 404) {
-            throw new Error(`Share ${id} not found`)
+        const query = `SELECT * FROM shares WHERE id = $1`
+        const result = await run(query, [id])
+        if (!result || !result.rowCount) {
+            return res.status(404).send({ error: 'Share not found' })
         }
 
         const data = result.rows[0]

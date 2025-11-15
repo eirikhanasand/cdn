@@ -14,11 +14,12 @@ const missingVariables = requiredEnvironmentVariables.filter(
 )
 
 if (missingVariables.length > 0) {
+    const missingVariablesStringified = missingVariables
+        .map((key) => `${key}: ${process.env[key] || 'undefined'}`)
+        .join('\n')
+
     throw new Error(
-        'Missing essential environment variables:\n' +
-            missingVariables
-                .map((key) => `${key}: ${process.env[key] || 'undefined'}`)
-                .join('\n')
+        `Missing essential environment variables:\n${missingVariablesStringified}`
     )
 }
 
@@ -38,6 +39,7 @@ const config = {
     DB_CACHE_TTL: 30000,
     CACHE_TTL: 60000,
     api: 'https://api.hanasand.com/api',
+    // api: 'http://localhost:8080/api',
     internal_api: 'https://internal.hanasand.com/api',
     internal_wss: 'wss://internal.hanasand.com/api/ws',
     vm_token: env.VM_TOKEN,
