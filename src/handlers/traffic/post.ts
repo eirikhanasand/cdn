@@ -1,6 +1,4 @@
 import run from '#db'
-import hasRole from '#utils/auth/hasRole.ts'
-import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 type PostRequestProps = {
