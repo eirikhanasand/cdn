@@ -1,6 +1,10 @@
 import config from '#constants'
 
 export default async function tokenWrapper(id: string, token: string): Promise<{ status: boolean, id: string | null }> {
+    if (!id || !token) {
+        return { status: false, id: null }
+    }
+
     try {
         const response = await fetch(`${config.api}/auth/token/${id}`, {
             headers: {
