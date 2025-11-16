@@ -16,7 +16,7 @@ export default async function postRequest(req: FastifyRequest, res: FastifyReply
     try {
         const ua = req.headers['user-agent'] || ''
         if (!ua.toString().startsWith('Hanasand Traffic Logger')) {
-            return res.status(400).send({ error: 'Unauthorized' })
+            return res.status(401).send({ error: 'Unauthorized' })
         }
 
         const {

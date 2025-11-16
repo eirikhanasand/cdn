@@ -10,12 +10,12 @@ export default async function lockShare(req: FastifyRequest, res: FastifyReply) 
         const token = tokenHeader.split(' ')[1] ?? ''
         const { status, id: userId } = await tokenWrapper(id, token)
         if (!status || !userId) {
-            return res.status(400).send({ error: 'Unauthorized' })
+            return res.status(401).send({ error: 'Unauthorized' })
         }
 
         const allowed = await permissionsWrapper({ userId, shareId: id })
         if (!allowed.status) {
-            return res.status(400).send({ error: 'Unauthorized' })
+            return res.status(401).send({ error: 'Unauthorized' })
         }
 
         const query = `

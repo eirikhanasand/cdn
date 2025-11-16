@@ -15,12 +15,12 @@ export default async function removeProjectsFromGroup(req: FastifyRequest, res: 
     const token = tokenHeader.split(' ')[1] ?? ''
     const { status, id: userId } = await tokenWrapper(user, token)
     if (!status || !userId) {
-        return res.status(400).send({ error: 'Unauthorized' })
+        return res.status(401).send({ error: 'Unauthorized' })
     }
 
     const allowed = await projectPermissionsWrapper({ userId, projectId: id })
     if (!allowed.status) {
-        return res.status(400).send({ error: 'Unauthorized' })
+        return res.status(401).send({ error: 'Unauthorized' })
     }
 
     try {

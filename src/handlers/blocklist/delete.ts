@@ -11,12 +11,12 @@ export default async function deleteBlocklist(req: FastifyRequest, res: FastifyR
         const token = tokenHeader.split(' ')[1] ?? ''
         const { status, id: userId } = await tokenWrapper(user, token)
         if (!status || !userId) {
-            return res.status(400).send({ error: 'Unauthorized' })
+            return res.status(401).send({ error: 'Unauthorized' })
         }
 
         const allowed = await hasRole({ id: userId, role: 'system_admin' })
         if (!allowed) {
-            return res.status(400).send({ error: 'Unauthorized' })
+            return res.status(401).send({ error: 'Unauthorized' })
         }
 
         const { id } = req.params as { id: string }
