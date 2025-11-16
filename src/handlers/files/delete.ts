@@ -5,7 +5,8 @@ import filePermissionsWrapper from '#utils/auth/filePermissionsWrapper.ts'
 
 export default async function deleteFile(req: FastifyRequest, res: FastifyReply) {
     const user: string = req.headers['id'] as string || ''
-    const token = req.headers['authorization'] || ''
+    const tokenHeader = req.headers['authorization'] || ''
+    const token = tokenHeader.split(' ')[1] ?? ''
     const { id } = req.params as { id: string }
     if (!id) {
         return res.status(400).send({ error: 'Missing image ID' })

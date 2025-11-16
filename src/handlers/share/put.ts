@@ -7,8 +7,9 @@ export default async function putShare(req: FastifyRequest, res: FastifyReply) {
     try {
         const { id } = req.params as { id: string }
         const { path, content, name } = req.body as { path?: string; content?: string, name?: string }
-
-        const { status, id: userId } = await tokenWrapper(id, (req.headers['authorization'] || ''))
+        const tokenHeader = req.headers['authorization'] || ''
+        const token = tokenHeader.split(' ')[1] ?? ''
+        const { status, id: userId } = await tokenWrapper(id, token)
         if (!status || !userId) {
             return res.status(400).send({ error: 'Unauthorized' })
         }

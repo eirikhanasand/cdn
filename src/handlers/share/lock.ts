@@ -6,7 +6,9 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 export default async function lockShare(req: FastifyRequest, res: FastifyReply) {
     try {
         const { id } = req.params as { id: string }
-        const { status, id: userId } = await tokenWrapper(id, (req.headers['authorization'] || ''))
+        const tokenHeader = req.headers['authorization'] || ''
+        const token = tokenHeader.split(' ')[1] ?? ''
+        const { status, id: userId } = await tokenWrapper(id, token)
         if (!status || !userId) {
             return res.status(400).send({ error: 'Unauthorized' })
         }

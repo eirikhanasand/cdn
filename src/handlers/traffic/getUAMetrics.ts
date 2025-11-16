@@ -1,11 +1,11 @@
-import run from '#db'
 import hasRole from '#utils/auth/hasRole.ts'
 import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function getUAMetrics(this: FastifyInstance, req: FastifyRequest, res: FastifyReply) {
     const user: string = req.headers['id'] as string || ''
-    const token = req.headers['authorization'] || ''
+    const tokenHeader = req.headers['authorization'] || ''
+    const token = tokenHeader.split(' ')[1] ?? ''
     const { status, id: userId } = await tokenWrapper(user, token)
     if (!status || !userId) {
         return res.status(400).send({ error: 'Unauthorized' })
