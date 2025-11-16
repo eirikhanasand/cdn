@@ -9,8 +9,8 @@ export default async function getDomainTPS(this: FastifyInstance, req: FastifyRe
     const { range } = req.query ?? {}
     if (range) {
         return await dynamicTPS(this, res, range)
-    } 
-    
+    }
+
     const response = this.cachedTPS
     return res.status(response.status).send(response.data)
 }
