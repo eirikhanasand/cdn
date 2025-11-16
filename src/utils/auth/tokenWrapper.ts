@@ -9,7 +9,11 @@ export default async function tokenWrapper(id: string, token: string): Promise<{
         })
 
         if (!response.ok) {
-            throw new Error('')
+            if (response.status === 401) {
+                return { status: false, id: null }
+            }
+
+            throw new Error(await response.text())
         }
 
         const data = await response.json() as User
