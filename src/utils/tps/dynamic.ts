@@ -1,7 +1,7 @@
 import run from '#db'
 import type { FastifyInstance, FastifyReply } from 'fastify'
 
-export default async function dynamicTPS(this: FastifyInstance, res: FastifyReply, range: string) {
+export default async function dynamicTPS(server: FastifyInstance, res: FastifyReply, range: string) {
     try {
         let whereClause = ''
         let intervalSeconds: number | null = null
@@ -28,7 +28,7 @@ export default async function dynamicTPS(this: FastifyInstance, res: FastifyRepl
                 intervalSeconds = null
                 break
             default:
-                const response = this.cachedTPS
+                const response = server.cachedTPS
                 return res.status(response.status).type('application/json').send(response.data)
         }
 
