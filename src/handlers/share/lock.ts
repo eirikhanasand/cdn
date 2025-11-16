@@ -21,7 +21,7 @@ export default async function lockShare(req: FastifyRequest, res: FastifyReply) 
 
         const query = `
             UPDATE shares
-            SET locked = TRUE
+            SET locked = NOT locked
             WHERE id = $1
             RETURNING *
         `

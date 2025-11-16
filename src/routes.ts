@@ -27,7 +27,6 @@ import getIPMetrics from './handlers/traffic/getIPMetrics.ts'
 import getUAMetrics from './handlers/traffic/getUAMetrics.ts'
 import getTPS from './handlers/traffic/getTPS.ts'
 import lockShare from './handlers/share/lock.ts'
-import unlockShare from './handlers/share/unlock.ts'
 import getProject from './handlers/project/get.ts'
 import lockProject from './handlers/project/lock.ts'
 import unlockProject from './handlers/project/unlock.ts'
@@ -68,7 +67,6 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     fastify.get('/share/editors/add/:id', addShareEditors)
     fastify.get('/share/editors/remove/:id', removeShareEditors)
     fastify.get('/share/lock/:id', lockShare)
-    fastify.get('/share/unlock/:id', unlockShare)
     fastify.put("/share/:id", putShare)
     fastify.post("/share/:id", postShare)
     
