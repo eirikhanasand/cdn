@@ -19,7 +19,6 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
         const { id, includeTree, name, path, content, parent, type } = req.body as PostShareProps ?? {}
         const user = req.headers['id']
         const userId = Array.isArray(user) ? user.join('') : user
-        const alias = getWords()
 
         if (!id || typeof content !== 'string') {
             return res.status(400).send({ error: 'Missing id or content.' })
@@ -29,11 +28,20 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
             return res.status(400).send({ error: `Invalid file type ('file' / 'folder'), but got ${type}.` })
         }
 
+        let alias = ''
         if (parent) {
             const perms = await permissionsWrapper({ userId: userId || '', shareId: parent })
             if (!perms.status) {
                 return res.status(401).send({ error: 'Unauthorized' })
             }
+
+            const aliasResult = await run('SELECT alias FROM shares WHERE id = $1', [parent])
+            console.log('aliasResult', aliasResult, aliasResult.rows[0])
+            alias = aliasResult.rows[0]
+        }
+
+        if (!alias) {
+            alias = getWords()[0]
         }
 
         const query = `
@@ -46,7 +54,7 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
             RETURNING *
         `
 
-        const params = [id, name || id, path || null, content, alias[0], parent || null, type || 'file', userId || null]
+        const params = [id, name || id, path || null, content, alias, parent || null, type || 'file', userId || null]
         const result = await run(query, params)
         if (!result || result.rowCount === 0) {
             return res.status(500).send({ error: 'Failed to create share' })
