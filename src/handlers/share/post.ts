@@ -16,7 +16,7 @@ type PostShareProps = {
 
 export default async function postShare(req: FastifyRequest, res: FastifyReply) {
     try {
-        const { id, includeTree, name, path, content, parent, type } = req.body as PostShareProps ?? {}
+        const { id, includeTree, name, path, content, parent: clientParent, type } = req.body as PostShareProps ?? {}
         const user = req.headers['id']
         const userId = Array.isArray(user) ? user.join('') : user
 
@@ -29,20 +29,23 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
         }
 
         let alias = ''
-        if (parent) {
-            const perms = await permissionsWrapper({ userId: userId || '', shareId: parent })
+        let parentType = 'file'
+        if (clientParent) {
+            const perms = await permissionsWrapper({ userId: userId || '', shareId: clientParent })
             if (!perms.status) {
                 return res.status(401).send({ error: 'Unauthorized' })
             }
 
-            const aliasResult = await run('SELECT alias FROM shares WHERE id = $1', [parent])
+            const aliasResult = await run('SELECT type, alias FROM shares WHERE id = $1', [clientParent])
             alias = aliasResult.rows[0].alias
+            parentType = aliasResult.rows[0].type
         }
 
         if (!alias) {
             alias = getWords()[0]
         }
 
+        const parent = parentType === 'file' ? null : clientParent || null
         const query = `
             INSERT INTO shares (id, name, path, content, alias, parent, type, owner)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -53,7 +56,7 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
             RETURNING *
         `
 
-        const params = [id, name || id, path || null, content, alias, parent || null, type || 'file', userId || null]
+        const params = [id, name || id, path || null, content, alias, parent, type || 'file', userId || null]
         const result = await run(query, params)
         if (!result || result.rowCount === 0) {
             return res.status(500).send({ error: 'Failed to create share' })
