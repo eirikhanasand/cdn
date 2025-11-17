@@ -144,7 +144,7 @@ EXECUTE FUNCTION update_updated_at_column();
 CREATE UNIQUE INDEX IF NOT EXISTS idx_files_path ON files(path);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_path ON shares(path);
 CREATE INDEX IF NOT EXISTS idx_shares_parent ON shares(parent);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_alias ON shares(alias);
+CREATE INDEX IF NOT EXISTS shares_alias_idx ON shares(alias);
 CREATE INDEX IF NOT EXISTS idx_shares_type ON shares(type);
 CREATE INDEX IF NOT EXISTS idx_shares_locked ON shares(locked);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_vms ON vms(vm_id);

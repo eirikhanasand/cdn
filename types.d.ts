@@ -21,3 +21,21 @@ type User = {
     name: string
     avatar: string
 }
+
+type FileItemBase = {
+    id: string
+    name: string
+    alias: string | null
+    parent: string | null
+}
+
+type FileFile = FileItemBase & {
+    type: 'file'
+}
+
+type FileFolder = FileItemBase & {
+    type: 'folder'
+    children: FileItem[]
+}
+
+type FileItem = FileFile | FileFolder
