@@ -33,35 +33,35 @@ export default async function putFile(req: FastifyRequest, res: FastifyReply) {
 
     const updates: string[] = []
     const values: any[] = []
-    let idx = 1
+    let index = 1
 
     if (name) {
-        updates.push(`name = $${idx++}`)
+        updates.push(`name = $${index++}`)
         values.push(name)
     }
 
     if (description) {
-        updates.push(`description = $${idx++}`)
+        updates.push(`description = $${index++}`)
         values.push(description)
     }
 
     if (data) {
-        updates.push(`data = $${idx++}`)
+        updates.push(`data = $${index++}`)
         values.push(Buffer.from(data, 'base64'))
     }
 
     if (path) {
-        updates.push(`path = $${idx++}`)
+        updates.push(`path = $${index++}`)
         values.push(path)
     }
 
     if (type) {
-        updates.push(`type = $${idx++}`)
+        updates.push(`type = $${index++}`)
         values.push(type)
     }
 
     values.push(id)
-    const sql = `UPDATE files SET ${updates.join(', ')} WHERE id = $${idx} RETURNING id`
+    const sql = `UPDATE files SET ${updates.join(', ')} WHERE id = $${index} RETURNING id`
 
     try {
         const result = await run(sql, values)
