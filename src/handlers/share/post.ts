@@ -19,8 +19,8 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
         const userId = Array.isArray(idHeader) ? idHeader.join('') : idHeader 
         const alias = getWords()
 
-        if (!id || !path || !content) {
-            return res.status(400).send({ error: 'Missing required fields: id, path or content.' })
+        if (!id || !content) {
+            return res.status(400).send({ error: 'Missing id or content.' })
         }
 
         if (type && type !== 'file' && type !== 'folder') {
@@ -44,7 +44,7 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
             RETURNING *
         `
 
-        const params = [id, name || id, path, content, alias[0], parent || null, type || 'file']
+        const params = [id, name || id, path || null, content, alias[0], parent || null, type || 'file']
         const result = await run(query, params)
         if (!result || result.rowCount === 0) {
             return res.status(500).send({ error: 'Failed to create share' })

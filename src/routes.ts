@@ -72,7 +72,7 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     
     // project
     fastify.get("/project/:alias", getProject)
-    fastify.get('/project/user:id', getUserProjects)
+    fastify.get('/project/user/:id', getUserProjects)
     fastify.get('/project/editors/add/:id', addProjectEditors)
     fastify.get('/project/editors/remove/:id', removeProjectEditors)
     fastify.get('/project/editors/:id', getProjectEditors)
