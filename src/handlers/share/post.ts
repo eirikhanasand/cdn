@@ -21,7 +21,7 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
         const userId = Array.isArray(user) ? user.join('') : user
         const alias = getWords()
 
-        if (!id || !content) {
+        if (!id || typeof content !== 'string') {
             return res.status(400).send({ error: 'Missing id or content.' })
         }
 
