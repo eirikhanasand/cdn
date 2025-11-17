@@ -22,17 +22,15 @@ type PermissionsWrapperResponse = {
 export default async function permissionsWrapper({ userId, shareId }: PermissionsProps): Promise<PermissionsWrapperResponse> {
     const query = await loadSQL('checkPermissions.sql')
     const result = await run(query, [userId, shareId])
-    console.log(result)
-    console.log(result.rows[0])
-    const data = result.rows[0] as Permissions
+    const data = result.rows[0] as Permissions | undefined
     const editors = Array.isArray(data?.editors) ? data.editors : []
 
-    if (data.owner !== userId && !editors.includes(userId)) {
+    if (data?.owner !== userId && !editors.includes(userId)) {
         return { status: false, permissions: null }
     }
 
     const permissions = []
-    const owner = data.owner === userId
+    const owner = data?.owner === userId
     const editor = editors.includes(userId)
 
     if (owner) {
