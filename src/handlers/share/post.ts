@@ -2,6 +2,7 @@ import run from '#db'
 import permissionsWrapper from '#utils/auth/permissionsWrapper.ts'
 import getWords from '#utils/getWords.ts'
 import loadSQL from '#utils/loadSQL.ts'
+import buildTree from '#utils/share/buildTree.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 type PostShareProps = {
@@ -17,6 +18,7 @@ type PostShareProps = {
 export default async function postShare(req: FastifyRequest, res: FastifyReply) {
     try {
         const { id, includeTree, name, path, content, parent: clientParent, type } = req.body as PostShareProps ?? {}
+        const { flat } = req.query as { flat?: boolean } ?? {}
         const user = req.headers['id']
         const userId = Array.isArray(user) ? user.join('') : user
 
@@ -72,7 +74,12 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
             return res.status(404).send({ error: `Share ${id} not found` })
         }
 
-        return res.status(201).send({ ...result.rows[0], tree: treeResult.rows })
+        if (flat) {
+            return res.status(201).send({ ...result.rows[0], tree: treeResult.rows })
+        }
+
+        const tree = buildTree(treeResult.rows)
+        return res.status(201).send({ ...result.rows[0], tree })
     } catch (error) {
         console.log(`Error creating share: ${error}`)
         return res.status(500).send({ error: 'Failed to create share' })
