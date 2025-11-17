@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyPluginOptions } from "fastify"
+import type { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import getIndex from './handlers/index/get.ts'
 import getFile from './handlers/files/get.ts'
 import putFile from './handlers/files/put.ts'
@@ -49,29 +49,29 @@ import createProjectGroup from './handlers/project/groups/post.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index
-    fastify.get("/", getIndex)
+    fastify.get('/', getIndex)
 
     // files
-    fastify.get("/files/:id", getFile)
-    fastify.get("/files/check", checkPath)
-    fastify.get("/files/path/:id", getFileByPath)
-    fastify.put("/files/:id", putFile)
-    fastify.post("/files", postFile)
-    fastify.delete("/files/:id", deleteFile)
+    fastify.get('/files/:id', getFile)
+    fastify.get('/files/check', checkPath)
+    fastify.get('/files/path/:id', getFileByPath)
+    fastify.put('/files/:id', putFile)
+    fastify.post('/files', postFile)
+    fastify.delete('/files/:id', deleteFile)
 
     // share
-    fastify.get("/share/:id", getShare)
-    fastify.get("/share/tree/:id", getTree)
+    fastify.get('/share/:id', getShare)
+    fastify.get('/share/tree/:id', getTree)
     fastify.get('/share/user/:id', getUserShares)
     fastify.get('/share/editors/:id', getShareEditors)
     fastify.get('/share/editors/add/:id', addShareEditors)
     fastify.get('/share/editors/remove/:id', removeShareEditors)
     fastify.get('/share/lock/:id', lockShare)
-    fastify.put("/share/:id", putShare)
-    fastify.post("/share", postShare)
+    fastify.put('/share/:id', putShare)
+    fastify.post('/share', postShare)
     
     // project
-    fastify.get("/project/:alias", getProject)
+    fastify.get('/project/:alias', getProject)
     fastify.get('/project/user/:id', getUserProjects)
     fastify.get('/project/editors/add/:id', addProjectEditors)
     fastify.get('/project/editors/remove/:id', removeProjectEditors)
@@ -90,9 +90,9 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     fastify.delete('/project/group/:id', deleteProjectGroup)
 
     // links
-    fastify.get("/link/:id", getLink)
-    fastify.put("/link/:id", putLink)
-    fastify.post("/link/:id", postLink)
+    fastify.get('/link/:id', getLink)
+    fastify.put('/link/:id', putLink)
+    fastify.post('/link/:id', postLink)
 
     // words
     fastify.get('/words', getWords)
