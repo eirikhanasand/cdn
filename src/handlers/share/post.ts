@@ -30,7 +30,7 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
         }
 
         if (parent) {
-            const perms = await permissionsWrapper({ userId: userId || '', shareId: id })
+            const perms = await permissionsWrapper({ userId: userId || '', shareId: parent })
             if (!perms.status) {
                 return res.status(401).send({ error: 'Unauthorized' })
             }
