@@ -28,7 +28,7 @@ export default async function putFile(req: FastifyRequest, res: FastifyReply) {
     }
 
     if (!name && !description && !data && !path && !type) {
-        return res.status(400).send({ error: "Nothing to update" })
+        return res.status(400).send({ error: 'Nothing to update' })
     }
 
     const updates: string[] = []
@@ -67,12 +67,12 @@ export default async function putFile(req: FastifyRequest, res: FastifyReply) {
         const result = await run(sql, values)
 
         if (result.rows.length === 0) {
-            return res.status(404).send({ error: "File not found" })
+            return res.status(404).send({ error: 'File not found' })
         }
 
         return { updated: result.rows[0].id }
     } catch (error) {
         console.log(error)
-        return res.status(500).send({ error: "Internal server error" })
+        return res.status(500).send({ error: 'Internal server error' })
     }
 }
