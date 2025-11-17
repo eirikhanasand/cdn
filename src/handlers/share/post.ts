@@ -36,8 +36,7 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
             }
 
             const aliasResult = await run('SELECT alias FROM shares WHERE id = $1', [parent])
-            console.log('aliasResult', aliasResult, aliasResult.rows[0])
-            alias = aliasResult.rows[0]
+            alias = aliasResult.rows[0].alias
         }
 
         if (!alias) {
