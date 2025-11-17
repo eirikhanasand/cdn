@@ -68,7 +68,7 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     fastify.get('/share/editors/remove/:id', removeShareEditors)
     fastify.get('/share/lock/:id', lockShare)
     fastify.put("/share/:id", putShare)
-    fastify.post("/share/:id", postShare)
+    fastify.post("/share", postShare)
     
     // project
     fastify.get("/project/:alias", getProject)
