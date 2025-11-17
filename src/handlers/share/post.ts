@@ -1,11 +1,13 @@
 import run from '#db'
 import permissionsWrapper from '#utils/auth/permissionsWrapper.ts'
 import getWords from '#utils/getWords.ts'
+import loadSQL from '#utils/loadSQL.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 type PostShareProps = {
     id?: string
     name?: string
+    includeTree?: boolean
     path?: string
     content?: string
     parent?: string
@@ -14,9 +16,9 @@ type PostShareProps = {
 
 export default async function postShare(req: FastifyRequest, res: FastifyReply) {
     try {
-        const { id, name, path, content, parent, type } = req.body as PostShareProps ?? {}
-        const idHeader = req.headers['id']
-        const userId = Array.isArray(idHeader) ? idHeader.join('') : idHeader 
+        const { id, includeTree, name, path, content, parent, type } = req.body as PostShareProps ?? {}
+        const user = req.headers['id']
+        const userId = Array.isArray(user) ? user.join('') : user
         const alias = getWords()
 
         if (!id || !content) {
@@ -35,8 +37,8 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
         }
 
         const query = `
-            INSERT INTO shares (id, name, path, content, alias, parent, type)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO shares (id, name, path, content, alias, parent, type, owner)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             ON CONFLICT (id)
             DO UPDATE SET
                 path = EXCLUDED.path,
@@ -44,13 +46,23 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
             RETURNING *
         `
 
-        const params = [id, name || id, path || null, content, alias[0], parent || null, type || 'file']
+        const params = [id, name || id, path || null, content, alias[0], parent || null, type || 'file', userId || null]
         const result = await run(query, params)
         if (!result || result.rowCount === 0) {
             return res.status(500).send({ error: 'Failed to create share' })
         }
 
-        return res.status(201).send(result.rows[0])
+        if (!includeTree) {
+            return res.status(201).send(result.rows[0])
+        }
+
+        const treeQuery = await loadSQL('getFolderTree.sql')
+        const treeResult = await run(treeQuery, [id])
+        if (treeResult.rows.length === 0) {
+            return res.status(404).send({ error: `Share ${id} not found` })
+        }
+
+        return res.status(201).send({ ...result.rows[0], tree: treeResult.rows })
     } catch (error) {
         console.log(`Error creating share: ${error}`)
         return res.status(500).send({ error: 'Failed to create share' })

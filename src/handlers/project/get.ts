@@ -1,6 +1,6 @@
 import run from '#db'
 import estimateReadingTime from '#utils/estimateReadTime.ts'
-import { loadSQL } from '#utils/loadSQL.ts'
+import loadSQL from '#utils/loadSQL.ts'
 import queryAlias from '#utils/share/queryAlias.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 

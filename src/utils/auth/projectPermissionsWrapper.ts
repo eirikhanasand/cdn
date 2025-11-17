@@ -1,5 +1,5 @@
 import run from '#db'
-import { loadSQL } from '#utils/loadSQL.ts'
+import loadSQL from '#utils/loadSQL.ts'
 
 type PermissionsProps = {
     userId: string

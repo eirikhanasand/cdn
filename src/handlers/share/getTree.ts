@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import run from '#utils/db.ts'
-import { loadSQL } from '#utils/loadSQL.ts'
+import loadSQL from '#utils/loadSQL.ts'
 import queryShare from '#utils/share/queryShare.ts'
 import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 

@@ -7,7 +7,7 @@ import handleTerminalMessage from '#utils/ws/handleTerminalMessage.ts'
 import followShell from '#utils/ws/followShell.ts'
 import run from '#db'
 // import run from '#db'
-// import { loadSQL } from '#utils/loadSQL.ts'
+// import loadSQL from '#utils/loadSQL.ts'
 
 export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
     fastify.register(async function (fastify) {

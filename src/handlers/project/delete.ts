@@ -1,6 +1,6 @@
 import run from '#db'
 import queryAlias from '#utils/share/queryAlias.ts'
-import { loadSQL } from '#utils/loadSQL.ts'
+import loadSQL from '#utils/loadSQL.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import projectPermissionsWrapper from '#utils/auth/projectPermissionsWrapper.ts'
