@@ -25,16 +25,15 @@ export default async function permissionsWrapper({ userId, shareId }: Permission
     const data = result.rows[0] as Permissions | undefined
     const editors = Array.isArray(data?.editors) ? data.editors : []
 
+    if (!data?.owner) {
+        return { status: true, permissions: ['ownerless'] }
+    }
+
     if (data?.owner !== userId && !editors.includes(userId)) {
         return { status: false, permissions: null }
     }
 
     const permissions = []
-    if (!data?.owner) {
-        permissions.push('ownerless')
-        return { status: true, permissions }
-    }
-
     const owner = data?.owner === userId
     const editor = editors.includes(userId)
 
