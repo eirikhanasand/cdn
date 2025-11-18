@@ -1,10 +1,19 @@
 import run from '#db'
+import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function getProjectEditors(req: FastifyRequest, res: FastifyReply) {
     const { id } = req.params as { id: string }
     if (!id) {
         return res.status(400).send({ error: 'Missing user id.' })
+    }
+
+    const user: string = req.headers['id'] as string || ''
+    const tokenHeader = req.headers['authorization'] || ''
+    const token = tokenHeader.split(' ')[1] ?? ''
+    const { status, id: userId } = await tokenWrapper(user, token)
+    if (!status || !userId) {
+        return res.status(401).send({ error: 'Unauthorized' })
     }
 
     try {
@@ -21,7 +30,6 @@ export default async function getProjectEditors(req: FastifyRequest, res: Fastif
         `
 
         const result = await run(query, [id])
-
         const projects = result.rows.filter(r => r.has_children)
         const nonProjects = result.rows.filter(r => !r.has_children)
 
