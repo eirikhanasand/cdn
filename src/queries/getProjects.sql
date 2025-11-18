@@ -1,9 +1,9 @@
 SELECT
     s.alias,
     MIN(s.owner) AS owner,
-    ARRAY_AGG(DISTINCT e.editor) AS editors,
-    COUNT(*) AS file_count,
-    SUM(OCTET_LENGTH(COALESCE(s.content, ''))) AS total_size,
+    COALESCE(ARRAY_AGG(DISTINCT e.editor) FILTER (WHERE e.editor IS NOT NULL), '{}') AS editors,
+    COUNT(*)::INT AS file_count,
+    SUM(OCTET_LENGTH(COALESCE(s.content, '')))::INT AS total_size,
     MAX(s.timestamp) AS last_updated
 FROM shares s
 LEFT JOIN LATERAL UNNEST(s.editors) AS e(editor) ON true
