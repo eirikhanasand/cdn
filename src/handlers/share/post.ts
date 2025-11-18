@@ -32,12 +32,14 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
 
         let alias = ''
         let parentType = 'file'
+        let permissions = []
         if (clientParent) {
-            const perms = await permissionsWrapper({ userId: userId || '', shareId: clientParent })
-            if (!perms.status) {
+            const response = await permissionsWrapper({ userId: userId || '', shareId: clientParent })
+            if (!response.status) {
                 return res.status(401).send({ error: 'Unauthorized' })
             }
 
+            permissions.push(response.permissions)
             const aliasResult = await run('SELECT type, alias FROM shares WHERE id = $1', [clientParent])
             alias = aliasResult.rows[0].alias
             parentType = aliasResult.rows[0].type
@@ -65,7 +67,7 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
         }
 
         if (!includeTree) {
-            return res.status(201).send(result.rows[0])
+            return res.status(201).send({ ...result.rows[0], permissions })
         }
 
         const treeQuery = await loadSQL('getFolderTree.sql')
@@ -75,11 +77,11 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
         }
 
         if (flat) {
-            return res.status(201).send({ ...result.rows[0], tree: treeResult.rows })
+            return res.status(201).send({ ...result.rows[0], tree: treeResult.rows, permissions })
         }
 
         const tree = buildTree(treeResult.rows)
-        return res.status(201).send({ ...result.rows[0], tree })
+        return res.status(201).send({ ...result.rows[0], tree, permissions })
     } catch (error) {
         console.log(`Error creating share: ${error}`)
         return res.status(500).send({ error: 'Failed to create share' })

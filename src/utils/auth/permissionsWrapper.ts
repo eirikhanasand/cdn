@@ -30,6 +30,11 @@ export default async function permissionsWrapper({ userId, shareId }: Permission
     }
 
     const permissions = []
+    if (!data?.owner) {
+        permissions.push('ownerless')
+        return { status: true, permissions }
+    }
+
     const owner = data?.owner === userId
     const editor = editors.includes(userId)
 
