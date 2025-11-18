@@ -20,10 +20,7 @@ export default async function getUserProjects(req: FastifyRequest, res: FastifyR
     try {
         const query = await loadSQL('getProjects.sql')
         const result = await run(query, [id])
-        const projects = result.rows.filter(r => r.has_children)
-        const nonProjects = result.rows.filter(r => !r.has_children)
-
-        return res.status(200).send({ projects, nonProjects })
+        return res.status(200).send(result.rows)
     } catch (err) {
         console.error(err)
         return res.status(500).send({ error: 'Failed to fetch user projects' })
