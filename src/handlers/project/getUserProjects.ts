@@ -1,4 +1,5 @@
 import run from '#db'
+import loadSQL from '#utils/loadSQL.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function getUserProjects(req: FastifyRequest, res: FastifyReply) {
@@ -8,16 +9,7 @@ export default async function getUserProjects(req: FastifyRequest, res: FastifyR
     }
 
     try {
-        const query = `
-            SELECT
-                s.*,
-                EXISTS(SELECT 1 FROM shares c WHERE c.parent = s.id) AS has_children
-            FROM shares s
-            WHERE s.owner = $1
-            AND s.type = 'folder'
-            ORDER BY s.timestamp DESC
-        `
-
+        const query = await loadSQL('getProjects.sql')
         const result = await run(query, [id])
         const projects = result.rows.filter(r => r.has_children)
         const nonProjects = result.rows.filter(r => !r.has_children)
