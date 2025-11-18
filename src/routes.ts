@@ -46,6 +46,7 @@ import deleteProjectGroup from './handlers/project/groups/deleteGroup.ts'
 import listGroupsByOwner from './handlers/project/groups/listGroupsByOwner.ts'
 import listGroupsByEditor from './handlers/project/groups/listGroupsByEditor.ts'
 import createProjectGroup from './handlers/project/groups/post.ts'
+import getProjects from './handlers/project/getProjects.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index
@@ -72,6 +73,7 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     
     // project
     fastify.get('/project/:alias', getProject)
+    fastify.get('/projects', getProjects)
     fastify.get('/projects/user/:id', getUserProjects)
     fastify.get('/project/editors/add/:id', addProjectEditors)
     fastify.get('/project/editors/remove/:id', removeProjectEditors)
