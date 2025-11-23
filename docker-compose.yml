@@ -2,6 +2,9 @@ services:
   cdn:
     container_name: cdn
     image: cdn
+    mem_limit: 1g
+    cpus: "2.0"
+    restart: always
     build:
       context: .
       dockerfile: Dockerfile
@@ -13,8 +16,10 @@ services:
       - "8501:8080"
 
   postgres:
-    image: postgres:15
     container_name: cdn_database
+    image: postgres:15
+    mem_limit: 1g
+    cpus: "2.0"
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER:-cdn}
@@ -33,6 +38,9 @@ services:
   cdn_cron:
     container_name: cdn_cron
     image: alpine-base
+    mem_limit: 1g
+    cpus: "2.0"
+    restart: always
     build:
       context: ./cron
       dockerfile: Dockerfile
@@ -43,7 +51,6 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: cdn
       DB_HOST: postgres
-    restart: always
 
 volumes:
   postgres_data:
