@@ -47,10 +47,14 @@ import listGroupsByOwner from './handlers/project/groups/listGroupsByOwner.ts'
 import listGroupsByEditor from './handlers/project/groups/listGroupsByEditor.ts'
 import createProjectGroup from './handlers/project/groups/post.ts'
 import getProjects from './handlers/project/getProjects.ts'
+import getInstall from './handlers/index/install.ts'
 
 export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
     // index
     fastify.get('/', getIndex)
+
+    // install.sh
+    fastify.get('/install.sh', getInstall)
 
     // files
     fastify.get('/files/:id', getFile)

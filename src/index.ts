@@ -6,6 +6,12 @@ import websocketPlugin from '@fastify/websocket'
 import fastifyMultipart from '@fastify/multipart'
 import ws from './plugins/ws.ts'
 import fp from '#utils/refresh/fp.ts'
+import path from 'path'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const fastify = Fastify({
     logger: true
@@ -24,6 +30,16 @@ fastify.register(cors, {
 
 const port = Number(process.env.PORT) || 8081
 
+fastify.decorate('install', (() => {
+    const filePath = path.join(__dirname, 'static', 'install.sh')
+    try {
+        return Buffer.from(fs.readFileSync(filePath))
+    } catch (err) {
+        console.error('Failed to read install.sh:', err)
+        return Buffer.from('')
+    }
+})())
+
 fastify.decorate('cachedIPMetrics', { status: 200, data: Buffer.from(JSON.stringify([])) })
 fastify.decorate('cachedUAMetrics', { status: 200, data: Buffer.from(JSON.stringify([])) })
 fastify.decorate('cachedTPS', { status: 200, data: Buffer.from(JSON.stringify([])) })
@@ -41,7 +57,7 @@ fastify.register(ws, { prefix: "/api" })
 fastify.register(routes, { prefix: "/api" })
 
 fastify.get('/', getIndex)
-fastify.get('/robots.txt', async (_, reply) => {
+fastify.get('/robots.txt', async (_, res) => {
     const disallowedPaths = [
         "/files",
         "/share",
@@ -72,7 +88,7 @@ fastify.get('/robots.txt', async (_, reply) => {
     disallowedPaths.forEach(path => {
         content += `Disallow: ${path}\n`
     })
-    reply.type('text/plain').send(content)
+    res.type('text/plain').send(content)
 })
 
 async function start() {
