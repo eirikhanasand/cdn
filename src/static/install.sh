@@ -5,60 +5,58 @@ if [[ $EUID -ne 0 ]]; then
     exit 2
 fi
 
-# ----- Changes user to ubuntu -----
+# ----- Upgrades VM to latest -----
 
-su - ubuntu
+apt update
+DEBIAN_FRONTEND=noninteractive apt upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+DEBIAN_FRONTEND=noninteractive apt autoremove -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 # ----- Adds swap -----
 
 swapon --show
 free -h
-sudo fallocate -l 4G /beeswap
-sudo chmod 600 /beeswap
-sudo mkswap /beeswap
-sudo swapon /beeswap
-echo "/beeswap none swap sw 0 0" | sudo tee -a /etc/fstab
+fallocate -l 4G /beeswap
+chmod 600 /beeswap
+mkswap /beeswap
+swapon /beeswap
+echo "/beeswap none swap sw 0 0" | tee -a /etc/fstab
 
 # ----- Creates scripts folder -----
 
-mkdir -p ~/scripts
+mkdir -p /home/ubuntu/scripts
 
-cat << 'EOF' > ~/scripts/docker_clean.sh
+cat << 'EOF' > /home/ubuntu/scripts/docker_clean.sh
 #!/bin/bash
 docker system prune -a --volumes -f
 EOF
 
-chmod +x ~/scripts/docker_clean.sh
+chmod +x /home/ubuntu/scripts/docker_clean.sh
 
 # ----- Installs docker -----
 
-sudo apt update
-sudo apt install -y ca-certificates curl gnupg lsb-release
+apt update
+DEBIAN_FRONTEND=noninteractive apt install -y ca-certificates curl gnupg lsb-release -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
-sudo mkdir -p /etc/apt/keyrings
+mkdir -p /etc/apt/keyrings
 [ -f /etc/apt/keyrings/docker.gpg ] || \
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
-  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
 echo \
     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
-    | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+apt update
+DEBIAN_FRONTEND=noninteractive apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 # docker compose up --build
 
-sudo usermod -aG docker $USER
-newgrp docker
-
-docker version
-docker compose version
+usermod -aG docker $USER
+su - ubuntu -c "docker version && docker compose version"
 
 # ----- Installs openresty -----
 
-sudo apt-get install -y \
-    build-essential \
+DEBIAN_FRONTEND=noninteractive apt install -y build-essential \
     libpcre3 libpcre3-dev zlib1g-dev \
     libssl-dev \
     perl \
@@ -66,27 +64,28 @@ sudo apt-get install -y \
     curl \
     unzip \
     wget \
-    git
+    git -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 wget https://openresty.org/download/openresty-1.27.1.1.tar.gz
 tar zxvf openresty-1.27.1.1.tar.gz
 rm openresty-1.27.1.1.tar.gz
 cd openresty-1.27.1.1
 
-./configure \
-    --prefix=/usr/local/openresty \
-    --with-http_ssl_module \
-    --with-pcre-jit \
-    --with-http_v2_module \
-    --with-stream \
-    --with-luajit
+# ./configure \
+#     --prefix=/usr/local/openresty \
+#     --with-http_ssl_module \
+#     --with-pcre-jit \
+#     --with-http_v2_module \
+#     --with-stream \
+#     --with-luajit
 
-gmake
-sudo gmake install
-echo 'export PATH=/usr/local/openresty/nginx/sbin:$PATH' >> ~/.bashrc
-source ~/.bashrc
-echo 'export PATH=/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH' >> ~/.bashrc
-source ~/.bashrc
+# gmake
+# gmake install
+echo 'export PATH=/usr/local/openresty/nginx/sbin:$PATH' >> /home/ubuntu/.bashrc
+source /home/ubuntu/.bashrc
+echo 'export PATH=/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH' >> /home/ubuntu/.bashrc
+source /home/ubuntu/.bashrc
+export PATH=/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH
 openresty -v
 
 cat > /etc/systemd/system/openresty.service << 'EOF'
@@ -108,11 +107,11 @@ Group=www-data
 WantedBy=multi-user.target
 EOF
 
-sudo mkdir -p /usr/local/openresty/nginx/logs
-sudo chown -R www-data:www-data /usr/local/openresty/nginx
-sudo systemctl daemon-reload
-sudo systemctl enable openresty
-sudo systemctl start openresty
+mkdir -p /usr/local/openresty/nginx/logs
+chown -R www-data:www-data /usr/local/openresty/nginx
+systemctl daemon-reload
+systemctl enable openresty
+systemctl start openresty
 
 cat > /usr/local/openresty/nginx/conf/nginx.conf << 'EOF'
 user www-data;
@@ -120,7 +119,7 @@ worker_processes auto;
 worker_cpu_affinity auto;
 pid /run/nginx.pid;
 error_log /var/log/nginx/error.log;
-include /etc/nginx/modules-enabled/*.conf;
+include /usr/local/openresty/nginx/modules-enabled/*.conf;
 
 events {
     worker_connections 8192;
@@ -139,7 +138,7 @@ http {
     types_hash_max_size 2048;
     server_tokens off;
 
-    include /etc/nginx/mime.types;
+    include /usr/local/openresty/nginx/mime.types;
     default_type application/octet-stream;
 
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -166,29 +165,28 @@ http {
 
     tcp_nodelay on;
 
-    include /etc/nginx/conf.d/*.conf;
-    include /etc/nginx/sites-enabled/*;
+    include /usr/local/openresty/nginx/conf.d/*.conf;
+    include /usr/local/openresty/nginx/sites-enabled/*;
 }
 EOF
 
-sudo apt install luarocks
-sudo luarocks install lua-resty-http
-sudo luarocks install lua-resty-openssl
+DEBIAN_FRONTEND=noninteractive apt install -y luarocks
+luarocks install lua-resty-http
+luarocks install lua-resty-openssl
 
 # ----- Adds current user as nginx editor -----
 
-getent group nginxedit >/dev/null || sudo groupadd nginxedit
-sudo usermod -aG nginxedit $USER
-sudo chgrp -R nginxedit /etc/nginx
-sudo chmod -R g+w /etc/nginx
-sudo chmod g+s /etc/nginx
-groups
-su - $USER
+getent group nginxedit >/dev/null || groupadd nginxedit
+usermod -aG nginxedit $USER
+chgrp -R nginxedit /usr/local/openresty/nginx
+chmod -R g+w /usr/local/openresty/nginx
+chmod g+s /usr/local/openresty/nginx
 
 # ----- Adds nvm and node -----
 
+export NVM_DIR="$HOME/.nvm"
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-source ~/.bashrc
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 nvm install node
 nvm alias default node
 node -v
@@ -260,7 +258,7 @@ EOF
 
 # ---- Adds alias -----
 
-cat >> ~/.bashrc << 'EOF'
+cat >> /home/ubuntu/.bashrc << 'EOF'
 alias cert="cat /etc/cron.d/certbot"
 alias config="sudo nano ~/.bashrc"
 alias dockerrestart="restartdocker"
@@ -271,9 +269,9 @@ alias l="ls -CF"
 alias la="ls -A"
 alias ll="ls -alF"
 alias ls="ls --color=auto"
-alias lua="sudo nano /etc/nginx/lua/traffic_logger.lua"
+alias lua="sudo nano /usr/local/openresty/nginx/lua/traffic_logger.lua"
 alias nginxconf="sudo nano /usr/local/openresty/nginx/conf/nginx.conf"
-alias nginxconfig="cd /etc/nginx/sites-available; git pull; sudo nano /etc/nginx/sites-available/default"
+alias nginxconfig="cd /usr/local/openresty/nginx/sites-available; git pull; sudo nano /usr/local/openresty/nginx/sites-available/default"
 alias nginxreload="sudo /usr/local/openresty/nginx/sbin/nginx -s reload"
 alias nginxstart="sudo /usr/local/openresty/bin/openresty"
 alias nginxstop="sudo /usr/local/openresty/bin/openresty -s stop"
@@ -287,7 +285,7 @@ alias restartdocker="sudo systemctl restart docker"
 alias viewcert="sudo certbot certificates"
 EOF
 
-source ~/.bashrc
+source /home/ubuntu/.bashrc
 
 # ----- Adds DNS services -----
 
@@ -349,11 +347,11 @@ vm.swappiness = 30
 # Reload with `sudo sysctl --system`
 EOF
 
-sudo sysctl --system
+sysctl --system
 
 # ----- Clones services -----
 
-cd ~
+cd /home/ubuntu
 git clone https://github.com/Login-Linjeforening-for-IT/queenbee.git
 git clone https://github.com/Login-Linjeforening-for-IT/beekeeper.git
 git clone https://github.com/Login-Linjeforening-for-IT/gitbee.git
@@ -372,7 +370,7 @@ git clone https://github.com/Login-Linjeforening-for-IT/gatherbee.git
 
 # ----- Changes directory to clone nginx config -----
 
-cd /etc/nginx
+cd /usr/local/openresty/nginx/
 git clone https://github.com/Login-Linjeforening-for-IT/nginx.git
 mv nginx sites-available
 
@@ -382,22 +380,22 @@ npm install -g pm2
 
 # ----- Starts docker services -----
 
-cd ~
-cd ~/app_api; rebuild -d
-cd ~/beeformed; rebuild -d
-cd ~/beehive; rebuild -d
-cd ~/beekeeper; rebuild -d
-cd ~/beeswarm; rebuild -d
-cd ~/dizambee; rebuild -d
-cd ~/gitbee; rebuild -d
-cd ~/nucleus_notifications; rebuild -d
-cd ~/queenbee; rebuild -d
-cd ~/studentbee; rebuild -d
-cd ~/tekkom_bot; rebuild -d
-cd ~/workerbee; rebuild -d
-cd ~/gatherbee; rebuild -d
+cd /home/ubuntu
+cd /home/ubuntu/app_api; git pull; docker compose up --build -d
+cd /home/ubuntu/beeformed; git pull; docker compose up --build -d
+cd /home/ubuntu/beehive; git pull; docker compose up --build -d
+cd /home/ubuntu/beekeeper; git pull; docker compose up --build -d
+cd /home/ubuntu/beeswarm; git pull; docker compose up --build -d
+cd /home/ubuntu/dizambee; git pull; docker compose up --build -d
+cd /home/ubuntu/gitbee; git pull; docker compose up --build -d
+cd /home/ubuntu/nucleus_notifications; git pull; docker compose up --build -d
+cd /home/ubuntu/queenbee; git pull; docker compose up --build -d
+cd /home/ubuntu/studentbee; git pull; docker compose up --build -d
+cd /home/ubuntu/tekkom_bot; git pull; docker compose up --build -d
+cd /home/ubuntu/workerbee; git pull; docker compose up --build -d
+cd /home/ubuntu/gatherbee; git pull; docker compose up --build -d
 
 # ----- Starts pm2 services -----
 
-cd ~/internal; pm2 start src/index.ts --name internal --interpreter node
-cd ~/scouterbee; pm2 start src/index.ts --name scouterbee --interpreter node
+cd /home/ubuntu/internal; pm2 start src/index.ts --name internal --interpreter node
+cd /home/ubuntu/scouterbee; pm2 start src/index.ts --name scouterbee --interpreter node
