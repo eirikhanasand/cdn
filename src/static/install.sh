@@ -5,6 +5,12 @@ if [[ $EUID -ne 0 ]]; then
     exit 2
 fi
 
+INVOKING_USER="${SUDO_USER:-root}"
+INVOKING_UID="$(id -u "$INVOKING_USER")"
+INVOKING_GID="$(id -g "$INVOKING_USER")"
+
+echo "🐝 Invoking user: $INVOKING_USER"
+
 # ----- Upgrades VM to latest -----
 
 apt update
@@ -13,24 +19,41 @@ DEBIAN_FRONTEND=noninteractive apt autoremove -y -o Dpkg::Options::="--force-con
 
 # ----- Adds swap -----
 
-swapon --show
-free -h
-fallocate -l 4G /beeswap
-chmod 600 /beeswap
-mkswap /beeswap
-swapon /beeswap
-echo "/beeswap none swap sw 0 0" | tee -a /etc/fstab
+SWAPFILE="/bee"
+
+# Checks if swap is already active
+if swapon --show=NAME | grep -qx "$SWAPFILE"; then
+    echo "Swap $SWAPFILE is already active. Skipping."
+fi
+
+# Checks if swap file exists but is not active
+if [[ -f "$SWAPFILE" ]]; then
+    echo "Swap file $SWAPFILE exists but is not active."
+    swapon "$SWAPFILE"
+else
+    echo "Creating swap file $SWAPFILE"
+
+    fallocate -l 4G "$SWAPFILE"
+    chmod 600 "$SWAPFILE"
+    mkswap "$SWAPFILE"
+    swapon "$SWAPFILE"
+fi
+
+# Ensures fstab entry exists
+if ! grep -qE "^\Q$SWAPFILE\E\s+none\s+swap" /etc/fstab; then
+    echo "$SWAPFILE none swap sw 0 0" >> /etc/fstab
+fi
 
 # ----- Creates scripts folder -----
 
-mkdir -p /home/ubuntu/scripts
+mkdir -p /home/$INVOKING_USER/scripts
 
-cat << 'EOF' > /home/ubuntu/scripts/docker_clean.sh
+cat << 'EOF' > /home/$INVOKING_USER/scripts/docker_clean.sh
 #!/bin/bash
 docker system prune -a --volumes -f
 EOF
 
-chmod +x /home/ubuntu/scripts/docker_clean.sh
+chmod +x /home/$INVOKING_USER/scripts/docker_clean.sh
 
 # ----- Installs docker -----
 
@@ -49,10 +72,8 @@ echo \
 apt update
 DEBIAN_FRONTEND=noninteractive apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
-# docker compose up --build
-
-usermod -aG docker $USER
-su - ubuntu -c "docker version && docker compose version"
+usermod -aG docker $INVOKING_USER
+su - $INVOKING_USER -c "docker version && docker compose version"
 
 # ----- Installs openresty -----
 
@@ -64,6 +85,7 @@ DEBIAN_FRONTEND=noninteractive apt install -y build-essential \
     curl \
     unzip \
     wget \
+    luarocks \
     git -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 wget https://openresty.org/download/openresty-1.27.1.1.tar.gz
@@ -71,47 +93,71 @@ tar zxvf openresty-1.27.1.1.tar.gz
 rm openresty-1.27.1.1.tar.gz
 cd openresty-1.27.1.1
 
-# ./configure \
-#     --prefix=/usr/local/openresty \
-#     --with-http_ssl_module \
-#     --with-pcre-jit \
-#     --with-http_v2_module \
-#     --with-stream \
-#     --with-luajit
+./configure \
+    --prefix=/usr/local/openresty \
+    --with-http_ssl_module \
+    --with-pcre-jit \
+    --with-http_v2_module \
+    --with-stream \
+    --with-luajit
 
-# gmake
-# gmake install
-echo 'export PATH=/usr/local/openresty/nginx/sbin:$PATH' >> /home/ubuntu/.bashrc
-source /home/ubuntu/.bashrc
-echo 'export PATH=/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH' >> /home/ubuntu/.bashrc
-source /home/ubuntu/.bashrc
+gmake
+gmake install
+echo 'export PATH=/usr/local/openresty/nginx/sbin:$PATH' >> /home/$INVOKING_USER/.bashrc
+source /home/$INVOKING_USER/.bashrc
+echo 'export PATH=/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH' >> /home/$INVOKING_USER/.bashrc
+source /home/$INVOKING_USER/.bashrc
 export PATH=/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH
 openresty -v
 
+# ----- Enables default site -----
+
+sudo mkdir -p /usr/local/openresty/nginx/sites-enabled
+sudo ln -sf /usr/local/openresty/nginx/sites-available/default /usr/local/openresty/nginx/sites-enabled/default
+
+# ----- Adds error file -----
+sudo mkdir -p /usr/local/openresty/nginx/conf/snippets
+
+cat > /usr/local/openresty/nginx/conf/snippets/errors.conf << 'EOF'
+error_page 400 401 403 404 405 406 408 409 410 418 429 451 500 501 502 503 504 /errors/$status.html;
+
+location ^~ /errors/ {
+    alias /usr/local/openresty/nginx/sites-available/fallback/;
+    internal;
+}
+EOF
+
+cat > /usr/local/openresty/nginx/conf/snippets/proxy-headers.conf << 'EOF'
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header Host $host;
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection "upgrade";
+proxy_cache_bypass $http_upgrade;
+EOF
+
+# ----- Updates configuration -----
+
 cat > /etc/systemd/system/openresty.service << 'EOF'
 [Unit]
-Description=OpenResty (Nginx with Lua)
+Description=OpenResty (Nginx + Lua) Web Server
 After=network.target
 
 [Service]
 Type=forking
-ExecStart=/usr/local/openresty/nginx/sbin/nginx
-ExecReload=/usr/local/openresty/nginx/sbin/nginx -s reload
-ExecStop=/usr/local/openresty/nginx/sbin/nginx -s quit
-PIDFile=/usr/local/openresty/nginx/logs/nginx.pid
-Restart=always
-User=www-data
-Group=www-data
+PIDFile=/run/nginx.pid
+
+ExecStart=/usr/local/openresty/bin/openresty
+ExecReload=/usr/local/openresty/bin/openresty -s reload
+ExecStop=/usr/local/openresty/bin/openresty -s quit
+
+Restart=on-failure
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
 EOF
-
-mkdir -p /usr/local/openresty/nginx/logs
-chown -R www-data:www-data /usr/local/openresty/nginx
-systemctl daemon-reload
-systemctl enable openresty
-systemctl start openresty
 
 cat > /usr/local/openresty/nginx/conf/nginx.conf << 'EOF'
 user www-data;
@@ -138,7 +184,7 @@ http {
     types_hash_max_size 2048;
     server_tokens off;
 
-    include /usr/local/openresty/nginx/mime.types;
+    include /usr/local/openresty/nginx/conf/mime.types;
     default_type application/octet-stream;
 
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -170,14 +216,28 @@ http {
 }
 EOF
 
-DEBIAN_FRONTEND=noninteractive apt install -y luarocks
+# ----- Adds lua extensions -----
+
 luarocks install lua-resty-http
 luarocks install lua-resty-openssl
+
+# ----- Updates nginx logfile permissions -----
+
+chown -R root:root /usr/local/openresty/nginx
+sudo mkdir -p /var/log/nginx
+sudo chown www-data:www-data /var/log/nginx
+sudo chmod 755 /var/log/nginx
+
+# ----- Starts openresty -----
+
+systemctl daemon-reload
+systemctl enable openresty
+systemctl start openresty
 
 # ----- Adds current user as nginx editor -----
 
 getent group nginxedit >/dev/null || groupadd nginxedit
-usermod -aG nginxedit $USER
+usermod -aG nginxedit $INVOKING_USER
 chgrp -R nginxedit /usr/local/openresty/nginx
 chmod -R g+w /usr/local/openresty/nginx
 chmod g+s /usr/local/openresty/nginx
@@ -258,7 +318,7 @@ EOF
 
 # ---- Adds alias -----
 
-cat >> /home/ubuntu/.bashrc << 'EOF'
+cat >> /home/$INVOKING_USER/.bashrc << 'EOF'
 alias cert="cat /etc/cron.d/certbot"
 alias config="sudo nano ~/.bashrc"
 alias dockerrestart="restartdocker"
@@ -285,7 +345,7 @@ alias restartdocker="sudo systemctl restart docker"
 alias viewcert="sudo certbot certificates"
 EOF
 
-source /home/ubuntu/.bashrc
+source /home/$INVOKING_USER/.bashrc
 
 # ----- Adds DNS services -----
 
@@ -351,7 +411,7 @@ sysctl --system
 
 # ----- Clones services -----
 
-cd /home/ubuntu
+cd /home/$INVOKING_USER
 git clone https://github.com/Login-Linjeforening-for-IT/queenbee.git
 git clone https://github.com/Login-Linjeforening-for-IT/beekeeper.git
 git clone https://github.com/Login-Linjeforening-for-IT/gitbee.git
@@ -380,22 +440,39 @@ npm install -g pm2
 
 # ----- Starts docker services -----
 
-cd /home/ubuntu
-cd /home/ubuntu/app_api; git pull; docker compose up --build -d
-cd /home/ubuntu/beeformed; git pull; docker compose up --build -d
-cd /home/ubuntu/beehive; git pull; docker compose up --build -d
-cd /home/ubuntu/beekeeper; git pull; docker compose up --build -d
-cd /home/ubuntu/beeswarm; git pull; docker compose up --build -d
-cd /home/ubuntu/dizambee; git pull; docker compose up --build -d
-cd /home/ubuntu/gitbee; git pull; docker compose up --build -d
-cd /home/ubuntu/nucleus_notifications; git pull; docker compose up --build -d
-cd /home/ubuntu/queenbee; git pull; docker compose up --build -d
-cd /home/ubuntu/studentbee; git pull; docker compose up --build -d
-cd /home/ubuntu/tekkom_bot; git pull; docker compose up --build -d
-cd /home/ubuntu/workerbee; git pull; docker compose up --build -d
-cd /home/ubuntu/gatherbee; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/app_api; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/beeformed; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/beehive; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/beekeeper; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/beeswarm; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/dizambee; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/gitbee; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/nucleus_notifications; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/queenbee; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/studentbee; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/tekkom_bot; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/workerbee; git pull; docker compose up --build -d
+cd /home/$INVOKING_USER/gatherbee; git pull; docker compose up --build -d
 
 # ----- Starts pm2 services -----
 
-cd /home/ubuntu/internal; pm2 start src/index.ts --name internal --interpreter node
-cd /home/ubuntu/scouterbee; pm2 start src/index.ts --name scouterbee --interpreter node
+cd /home/$INVOKING_USER/internal; pm2 start src/index.ts --name internal --interpreter node
+cd /home/$INVOKING_USER/scouterbee; pm2 start src/index.ts --name scouterbee --interpreter node
+
+# ----- Returns to home dir -----
+
+cd /home/$INVOKING_USER
+
+# ----- Confirms installation -----
+
+echo "🐝 Running containers:"
+docker ps
+
+echo "🐝 Listening instances:"
+echo "🐝 Port 443:"
+lsof -i :443
+
+echo "🐝 Port 80:"
+lsof -i :80
+
+echo "🐝 Installation complete."
