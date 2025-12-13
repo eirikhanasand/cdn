@@ -474,7 +474,7 @@ deploy() {
     fi
 }
 
-# ----- Deploys services -----
+# ----- Deploys docker services -----
 
 deploy app_api
 deploy beeformed
@@ -488,10 +488,14 @@ deploy studentbee
 deploy tekkom_bot
 deploy workerbee
 
-# ----- Starts pm2 services -----
+# ----- Deploys pm2 services -----
 
 deploy internal pm2
 deploy scouterbee pm2
+
+# ----- Fixes ownership -----
+
+chown -R $INVOKING_USER:$INVOKING_USER /home/$INVOKING_USER
 
 # ----- Returns to home dir -----
 
