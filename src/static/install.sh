@@ -5,6 +5,10 @@ if [[ $EUID -ne 0 ]]; then
     exit 2
 fi
 
+# ----- Changes user to ubuntu -----
+
+su - ubuntu
+
 # ----- Adds swap -----
 
 swapon --show
@@ -158,6 +162,8 @@ alias reload="source ~/.bashrc"
 alias restartdocker="sudo systemctl restart docker"
 alias viewcert="sudo certbot certificates"
 EOF
+
+source ~/.bashrc
 
 # ----- Adds DNS services -----
 
