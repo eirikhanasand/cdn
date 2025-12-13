@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-if [ "$(id -u)" -ne 0 ]; then
+if [[ $EUID -ne 0 ]]; then
     echo "This script must be run as root. Use sudo." >&2
     exit 2
 fi
@@ -51,7 +51,7 @@ newgrp docker
 
 # ----- Adds current user as nginx editor -----
 
-sudo groupadd nginxedit
+getent group nginxedit >/dev/null || sudo groupadd nginxedit
 sudo usermod -aG nginxedit $USER
 sudo chgrp -R nginxedit /etc/nginx
 sudo chmod -R g+w /etc/nginx
@@ -222,26 +222,26 @@ sudo sysctl --system
 # ----- Clones services -----
 
 cd ~
-git clone git@github.com:Login-Linjeforening-for-IT/queenbee.git
-git clone git@github.com:Login-Linjeforening-for-IT/beekeeper.git
-git clone git@github.com:Login-Linjeforening-for-IT/gitbee.git
-git clone git@github.com:Login-Linjeforening-for-IT/beeswarm.git
-git clone git@github.com:Login-Linjeforening-for-IT/nucleus_notifications.git
-git clone git@github.com:Login-Linjeforening-for-IT/app_api.git
-git clone git@github.com:Login-Linjeforening-for-IT/scouterbee.git
-git clone git@github.com:Login-Linjeforening-for-IT/workerbee.git
-git clone git@github.com:Login-Linjeforening-for-IT/beehive.git
-git clone git@github.com:Login-Linjeforening-for-IT/studentbee.git
-git clone git@github.com:Login-Linjeforening-for-IT/tekkom_bot.git
-git clone git@github.com:Login-Linjeforening-for-IT/beeformed.git
-git clone git@github.com:Login-Linjeforening-for-IT/dizambee.git
-git clone git@github.com:Login-Linjeforening-for-IT/internal.git
-git clone git@github.com:Login-Linjeforening-for-IT/gatherbee.git
+git clone https://github.com/Login-Linjeforening-for-IT/queenbee.git
+git clone https://github.com/Login-Linjeforening-for-IT/beekeeper.git
+git clone https://github.com/Login-Linjeforening-for-IT/gitbee.git
+git clone https://github.com/Login-Linjeforening-for-IT/beeswarm.git
+git clone https://github.com/Login-Linjeforening-for-IT/nucleus_notifications.git
+git clone https://github.com/Login-Linjeforening-for-IT/app_api.git
+git clone https://github.com/Login-Linjeforening-for-IT/scouterbee.git
+git clone https://github.com/Login-Linjeforening-for-IT/workerbee.git
+git clone https://github.com/Login-Linjeforening-for-IT/beehive.git
+git clone https://github.com/Login-Linjeforening-for-IT/studentbee.git
+git clone https://github.com/Login-Linjeforening-for-IT/tekkom_bot.git
+git clone https://github.com/Login-Linjeforening-for-IT/beeformed.git
+git clone https://github.com/Login-Linjeforening-for-IT/dizambee.git
+git clone https://github.com/Login-Linjeforening-for-IT/internal.git
+git clone https://github.com/Login-Linjeforening-for-IT/gatherbee.git
 
 # ----- Changes directory to clone nginx config -----
 
 cd /etc/nginx
-git clone git@github.com:Login-Linjeforening-for-IT/nginx.git
+git clone https://github.com/Login-Linjeforening-for-IT/nginx.git
 mv nginx sites-available
 
 # ----- Installs pm2 -----
