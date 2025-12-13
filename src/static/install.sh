@@ -55,6 +55,125 @@ newgrp docker
 docker version
 docker compose version
 
+# ----- Installs openresty -----
+
+sudo apt-get install -y \
+    build-essential \
+    libpcre3 libpcre3-dev zlib1g-dev \
+    libssl-dev \
+    perl \
+    make \
+    curl \
+    unzip \
+    wget \
+    git
+
+wget https://openresty.org/download/openresty-1.27.1.1.tar.gz
+tar zxvf openresty-1.27.1.1.tar.gz
+cd openresty-1.27.1.1
+
+./configure \
+    --prefix=/usr/local/openresty \
+    --with-http_ssl_module \
+    --with-pcre-jit \
+    --with-http_v2_module \
+    --with-stream \
+    --with-luajit
+
+gmake
+sudo gmake install
+echo 'export PATH=/usr/local/openresty/nginx/sbin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+echo 'export PATH=/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+openresty -v
+
+cat > /etc/systemd/system/openresty.service << 'EOF'
+[Unit]
+Description=OpenResty (Nginx with Lua)
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/local/openresty/nginx/sbin/nginx
+ExecReload=/usr/local/openresty/nginx/sbin/nginx -s reload
+ExecStop=/usr/local/openresty/nginx/sbin/nginx -s quit
+PIDFile=/usr/local/openresty/nginx/logs/nginx.pid
+Restart=always
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo mkdir -p /usr/local/openresty/nginx/logs
+sudo chown -R www-data:www-data /usr/local/openresty/nginx
+sudo systemctl daemon-reload
+sudo systemctl enable openresty
+sudo systemctl start openresty
+
+cat > /usr/local/openresty/nginx/conf/nginx.conf << 'EOF'
+user www-data;
+worker_processes auto;
+worker_cpu_affinity auto;
+pid /run/nginx.pid;
+error_log /var/log/nginx/error.log;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+    worker_connections 8192;
+    multi_accept on;
+}
+
+http {
+    lua_package_path "/usr/local/share/lua/5.1/?.lua;;";
+    lua_package_cpath "/usr/local/lib/lua/5.1/?.so;;";
+
+    server_names_hash_max_size 2048;
+    server_names_hash_bucket_size 128;
+
+    sendfile on;
+    tcp_nopush on;
+    types_hash_max_size 2048;
+    server_tokens off;
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_tickets off;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    log_format main '$remote_addr - $remote_user [$time_local] '
+        '"$request" $status $body_bytes_sent '
+        '"$http_referer" "$http_user_agent" '
+        '"$host" "$upstream_addr" "$upstream_status" "$upstream_response_time"';
+
+    access_log /var/log/nginx/access.log main buffer=32k;
+
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 7;
+    gzip_buffers 16 8k;
+    gzip_min_length 256;
+    gzip_http_version 1.1;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    tcp_nodelay on;
+
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+}
+EOF
+
+sudo apt install luarocks
+sudo luarocks install lua-resty-http
+sudo luarocks install lua-resty-openssl
+
 # ----- Adds current user as nginx editor -----
 
 getent group nginxedit >/dev/null || sudo groupadd nginxedit
