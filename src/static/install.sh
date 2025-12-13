@@ -185,10 +185,14 @@ sudo chmod g+s /etc/nginx
 groups
 su - $USER
 
-# ----- Adds nvm -----
+# ----- Adds nvm and node -----
 
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
+nvm install node
+nvm alias default node
+node -v
+npm -v
 
 # ----- Removes excess motd files -----
 
