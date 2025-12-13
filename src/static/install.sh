@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 
-if [[ $EUID -ne 0 ]]; then
-  echo "This script must be run as root. Use sudo." >&2
-  exit 2
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root. Use sudo." >&2
+    exit 2
 fi
 
 # ----- Adds swap -----
@@ -35,8 +35,8 @@ sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
 echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
-  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+    | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt update
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
@@ -124,8 +124,8 @@ EOF
 # ----- Adds cronjob to remove dangling Docker containers -----
 
 ( crontab -l 2>/dev/null; \
-  echo "# removes dangling docker entities every day at 3am"; \
-  echo "0 3 * * * /usr/bin/docker system prune -a --volumes -f >/dev/null 2>&1" \
+    echo "# removes dangling docker entities every day at 3am"; \
+    echo "0 3 * * * /usr/bin/docker system prune -a --volumes -f >/dev/null 2>&1" \
 ) | crontab -
 
 # ---- Adds alias -----
@@ -203,9 +203,9 @@ EOF
 
 cat > /etc/docker/daemon.json << 'EOF'
 {
-  "dns": ["8.8.8.8", "1.1.1.1", "10.177.195.1", "213.186.33.99"],
-  "registry-mirrors": ["https://mirror.gcr.io"],
-  "storage-driver": "overlay2"
+    "dns": ["8.8.8.8", "1.1.1.1", "10.177.195.1", "213.186.33.99"],
+    "registry-mirrors": ["https://mirror.gcr.io"],
+    "storage-driver": "overlay2"
 }
 EOF
 
