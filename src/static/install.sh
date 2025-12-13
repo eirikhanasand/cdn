@@ -318,7 +318,7 @@ EOF
     echo "0 3 * * * /usr/bin/docker system prune -a --volumes -f >/dev/null 2>&1" \
 ) | crontab -
 
-# ---- Adds alias -----
+# ----- Adds alias -----
 
 cat >> /home/$INVOKING_USER/.bashrc << 'EOF'
 alias cert="cat /etc/cron.d/certbot"
@@ -404,12 +404,26 @@ EOF
 # ----- Reduces swap usage -----
 
 cat > /etc/security/sysctl.conf << 'EOF'
-vm.swappiness = 30
+vm.swappiness = 10
 
 # Reload with `sudo sysctl --system`
 EOF
 
 sysctl --system
+
+# ----- Installs 1Password CLI -----
+
+curl -sS https://downloads.1password.com/linux/keys/1password.asc | \
+sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg && \
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | \
+sudo tee /etc/apt/sources.list.d/1password.list && \
+sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/ && \
+curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | \
+sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol && \
+sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22 && \
+curl -sS https://downloads.1password.com/linux/keys/1password.asc | \
+sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg && \
+sudo apt update && sudo apt install 1password-cli
 
 # ----- Clones services -----
 
@@ -427,8 +441,13 @@ git clone https://github.com/Login-Linjeforening-for-IT/studentbee.git
 git clone https://github.com/Login-Linjeforening-for-IT/tekkom_bot.git
 git clone https://github.com/Login-Linjeforening-for-IT/beeformed.git
 git clone https://github.com/Login-Linjeforening-for-IT/internal.git
+git clone https://github.com/Login-Linjeforening-for-IT/honeypot.git
 
-# ----- Changes directory to clone nginx config -----
+# ----- Adds execute permission to getSecret script -----
+
+chmod +x /home/$INVOKING_USER/honeypot/scripts/getSecret.sh
+
+# ----- Clones nginx config -----
 
 cd /usr/local/openresty/nginx/
 git clone https://github.com/Login-Linjeforening-for-IT/nginx.git
@@ -438,24 +457,41 @@ mv nginx sites-available
 
 npm install -g pm2
 
-# ----- Starts docker services -----
+# ----- Function to start services -----
 
-cd /home/$INVOKING_USER/app_api; git pull; docker compose up --build -d
-cd /home/$INVOKING_USER/beeformed; git pull; docker compose up --build -d
-cd /home/$INVOKING_USER/beehive; git pull; docker compose up --build -d
-cd /home/$INVOKING_USER/beekeeper; git pull; docker compose up --build -d
-cd /home/$INVOKING_USER/beeswarm; git pull; docker compose up --build -d
-cd /home/$INVOKING_USER/gitbee; git pull; docker compose up --build -d
-cd /home/$INVOKING_USER/nucleus_notifications; git pull; docker compose up --build -d
-cd /home/$INVOKING_USER/queenbee; git pull; docker compose up --build -d
-cd /home/$INVOKING_USER/studentbee; git pull; docker compose up --build -d
-cd /home/$INVOKING_USER/tekkom_bot; git pull; docker compose up --build -d
-cd /home/$INVOKING_USER/workerbee; git pull; docker compose up --build -d
+deploy() {
+    local dir="$1"
+    local use_pm2="$2"
+
+    cd "/home/$INVOKING_USER/$dir" || return 1
+    git pull || return 1
+    /home/$INVOKING_USER/honeypot/scripts/getSecret.sh || return 1
+    
+    if [[ "$use_pm2" == "pm2" ]]; then
+        pm2 start src/index.ts --name "$dir" --interpreter node
+    else
+        docker compose up --build -d
+    fi
+}
+
+# ----- Deploys services -----
+
+deploy app_api
+deploy beeformed
+deploy beehive
+deploy beekeeper
+deploy beeswarm
+deploy gitbee
+deploy nucleus_notifications
+deploy queenbee
+deploy studentbee
+deploy tekkom_bot
+deploy workerbee
 
 # ----- Starts pm2 services -----
 
-cd /home/$INVOKING_USER/internal; pm2 start src/index.ts --name internal --interpreter node
-cd /home/$INVOKING_USER/scouterbee; pm2 start src/index.ts --name scouterbee --interpreter node
+deploy internal pm2
+deploy scouterbee pm2
 
 # ----- Returns to home dir -----
 
