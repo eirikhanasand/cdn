@@ -49,11 +49,11 @@ sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 # docker compose up --build
 
-docker version
-docker compose version
-
 sudo usermod -aG docker $USER
 newgrp docker
+
+docker version
+docker compose version
 
 # ----- Adds current user as nginx editor -----
 
