@@ -70,6 +70,7 @@ sudo apt-get install -y \
 
 wget https://openresty.org/download/openresty-1.27.1.1.tar.gz
 tar zxvf openresty-1.27.1.1.tar.gz
+rm openresty-1.27.1.1.tar.gz
 cd openresty-1.27.1.1
 
 ./configure \
