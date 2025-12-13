@@ -73,7 +73,6 @@ export default async function postFile(req: FastifyRequest, res: FastifyReply) {
             return res.status(409).send({ error: `Path '${filePath}' taken` })
         }
 
-        console.log("sent off", {id})
         return res.send({ id })
     } catch (error) {
         console.error(error)

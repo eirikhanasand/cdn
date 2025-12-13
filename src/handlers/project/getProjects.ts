@@ -6,11 +6,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 export default async function getProjects(req: FastifyRequest, res: FastifyReply) {
     const tokenHeader = req.headers['authorization'] || ''
     const token = tokenHeader.split(' ')[1] ?? ''
-    let i = 0
-    while (i < 20) {
-        console.log([...token])
-        i++
-    }
+
     if (!token || token !== config.vm_api_token) {
         return res.status(401).send({ error: 'Unauthorized' })
     }
