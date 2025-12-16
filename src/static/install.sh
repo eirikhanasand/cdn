@@ -98,6 +98,7 @@ cd openresty-1.27.1.1
 ./configure \
     --prefix=/usr/local/openresty \
     --with-http_ssl_module \
+    --with-http_realip_module \
     --with-pcre-jit \
     --with-http_v2_module \
     --with-stream \
@@ -338,7 +339,7 @@ alias nginxreload="sudo /usr/local/openresty/nginx/sbin/nginx -s reload"
 alias nginxstart="sudo /usr/local/openresty/bin/openresty"
 alias nginxstop="sudo /usr/local/openresty/bin/openresty -s stop"
 alias nginxtest="sudo /usr/local/openresty/nginx/sbin/nginx -t"
-alias scouterbee="cd ~/scouterbee; git pull; pm2 restart scouterbe"
+alias scouterbee="cd ~/scouterbee; git pull; pm2 restart scouterbee"
 alias internal="cd ~/internal; git pull; pm2 restart internal"
 alias rebuild="git pull; docker compose up --build"
 alias redeploy="rebuild"
