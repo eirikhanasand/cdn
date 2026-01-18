@@ -17,5 +17,5 @@ export default async function getIPMetrics(this: FastifyInstance, req: FastifyRe
     }
 
     const response = this.cachedIPMetrics
-    return res.status(response.status).send(response.data)
+    return res.type('application/json').status(response.status).send(response.data)
 }

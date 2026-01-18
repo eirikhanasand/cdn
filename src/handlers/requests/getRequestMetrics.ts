@@ -8,5 +8,5 @@ export default async function getRequestMetrics(this: FastifyInstance, req: Fast
     }
 
     const response = this.cachedSummary
-    return res.status(response.status).send(response.data[metric])
+    return res.type('application/json').status(response.status).send(response.data[metric])
 }

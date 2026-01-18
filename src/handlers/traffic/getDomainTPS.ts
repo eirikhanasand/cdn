@@ -12,5 +12,5 @@ export default async function getDomainTPS(this: FastifyInstance, req: FastifyRe
     }
 
     const response = this.cachedTPS
-    return res.status(response.status).send(response.data)
+    return res.type('application/json').status(response.status).send(response.data)
 }
