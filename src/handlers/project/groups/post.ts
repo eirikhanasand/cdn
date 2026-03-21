@@ -26,8 +26,8 @@ export default async function createProjectGroup(req: FastifyRequest, res: Fasti
         `
         const result = await run(query, [id, name, description || null, userId])
         return res.status(201).send(result.rows[0])
-    } catch (err) {
-        console.error('Failed to create project group', err)
+    } catch (error) {
+        console.error('Failed to create project group:', error)
         return res.status(500).send({ error: 'Failed to create project group' })
     }
 }

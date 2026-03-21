@@ -31,8 +31,8 @@ export default async function listGroupsByOwner(req: FastifyRequest, res: Fastif
         `
         const result = await run(query, [id])
         return res.status(200).send(result.rows)
-    } catch (err) {
-        console.error('Failed to list groups by owner', err)
+    } catch (error) {
+        console.error('Failed to list groups by owner:', error)
         return res.status(500).send({ error: 'Failed to list groups' })
     }
 }

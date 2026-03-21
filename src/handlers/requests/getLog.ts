@@ -40,7 +40,7 @@ export default async function getRequestLogs(req: FastifyRequest, res: FastifyRe
 
         return res.status(200).send(result.rows)
     } catch (error) {
-        console.error(`Error fetching request logs:`, error)
+        console.error('Error fetching request logs:', error)
         return res.status(500).send({ error: 'Failed to fetch request logs' })
     }
 }

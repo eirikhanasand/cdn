@@ -39,8 +39,8 @@ export default async function getShareEditors(req: FastifyRequest, res: FastifyR
 
         const result = await run(query, [id])
         return res.status(200).send(result.rows)
-    } catch (err) {
-        console.error(err)
+    } catch (error) {
+        console.log('Failed to fetch shares:', error)
         return res.status(500).send({ error: 'Failed to fetch shares' })
     }
 }

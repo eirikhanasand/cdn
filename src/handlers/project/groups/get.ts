@@ -31,8 +31,8 @@ export default async function listProjectsInGroup(req: FastifyRequest, res: Fast
         `
         const result = await run(query, [id])
         return res.status(200).send(result.rows)
-    } catch (err) {
-        console.error('Failed to list projects in group', err)
+    } catch (error) {
+        console.error('Failed to list projects in group:', error)
         return res.status(500).send({ error: 'Failed to list projects in group' })
     }
 }

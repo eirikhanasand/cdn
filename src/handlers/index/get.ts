@@ -1,4 +1,4 @@
-import type { FastifyReply, FastifyRequest } from "fastify"
+import type { FastifyReply, FastifyRequest } from 'fastify'
 
 /**
  * Base information about the cdn if the route was not specified

@@ -10,7 +10,7 @@ export default async function getTree(req: FastifyRequest, res: FastifyReply) {
     const { flat } = req.query as { flat?: boolean } ?? {}
 
     try {
-        const shareQuery = `SELECT * FROM shares WHERE id = $1`
+        const shareQuery = 'SELECT * FROM shares WHERE id = $1'
         const shareQueryResult = await run(shareQuery, [id])
         let owner = null
         if (!shareQueryResult || !shareQueryResult.rowCount) {
@@ -46,7 +46,7 @@ export default async function getTree(req: FastifyRequest, res: FastifyReply) {
         const tree = buildTree(result.rows)
         return res.send(tree)
     } catch (error) {
-        console.error(error)
-        return res.status(500).send({ error: 'Internal server error' })
+        console.log('Failed to get tree:', error)
+        return res.status(500).send({ error: 'Failed to get tree.' })
     }
 }

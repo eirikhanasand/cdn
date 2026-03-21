@@ -30,8 +30,8 @@ export default async function removeProjectsFromGroup(req: FastifyRequest, res: 
         `
         await run(query, [id, shareIds])
         return res.status(200).send({ success: true })
-    } catch (err) {
-        console.error('Failed to remove projects from group', err)
+    } catch (error) {
+        console.error('Failed to remove projects from group:', error)
         return res.status(500).send({ error: 'Failed to remove projects from group' })
     }
 }

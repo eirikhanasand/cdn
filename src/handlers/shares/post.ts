@@ -32,7 +32,7 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
 
         let alias = ''
         let parentType = 'file'
-        let permissions = []
+        const permissions = []
         if (clientParent) {
             const response = await permissionsWrapper({ userId: userId || '', shareId: clientParent })
             if (!response.status) {

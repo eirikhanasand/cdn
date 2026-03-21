@@ -45,8 +45,8 @@ export default async function addShareEditors(req: FastifyRequest, res: FastifyR
         }
 
         return res.status(200).send(result.rows[0])
-    } catch (err) {
-        console.error(`Error adding editors to share:`, err)
+    } catch (error) {
+        console.error('Error adding editors to share:', error)
         return res.status(500).send({ error: 'Failed to add editors' })
     }
 }

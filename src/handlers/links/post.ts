@@ -17,7 +17,7 @@ export default async function postLink(req: FastifyRequest, res: FastifyReply) {
             ON CONFLICT (id)
             DO NOTHING;
         `
-        
+
         const randomId = randomUUID().slice(0, 6)
         const result = await run(query, [id || randomId, path])
 

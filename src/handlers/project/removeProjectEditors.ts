@@ -46,8 +46,8 @@ export default async function removeProjectEditors(req: FastifyRequest, res: Fas
         }
 
         return res.status(200).send(result.rows[0])
-    } catch (err) {
-        console.error(`Error removing editors from project:`, err)
+    } catch (error) {
+        console.error('Error removing editors from project:', error)
         return res.status(500).send({ error: 'Failed to remove editors' })
     }
 }

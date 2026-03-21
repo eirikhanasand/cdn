@@ -39,8 +39,8 @@ export default async function deleteProjectGroup(req: FastifyRequest, res: Fasti
             deleted: true,
             group: result.rows[0],
         })
-    } catch (err) {
-        console.error(`Error deleting project group:`, err)
+    } catch (error) {
+        console.error('Error deleting project group:', error)
         return res.status(500).send({ error: 'Failed to delete project group' })
     }
 }

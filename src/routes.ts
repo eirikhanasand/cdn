@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify'
+import type { FastifyInstance } from 'fastify'
 import getIndex from './handlers/index/get.ts'
 import getFile from './handlers/files/get.ts'
 import putFile from './handlers/files/put.ts'
@@ -49,7 +49,7 @@ import createProjectGroup from './handlers/project/groups/post.ts'
 import getProjects from './handlers/project/getProjects.ts'
 import getInstall from './handlers/index/install.ts'
 
-export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPluginOptions) {
+export default async function apiRoutes(fastify: FastifyInstance) {
     // index
     fastify.get('/', getIndex)
 
@@ -74,7 +74,7 @@ export default async function apiRoutes(fastify: FastifyInstance, _: FastifyPlug
     fastify.get('/share/lock/:id', lockShare)
     fastify.put('/share/:id', putShare)
     fastify.post('/share', postShare)
-    
+
     // project
     fastify.get('/project/:alias', getProject)
     fastify.get('/projects', getProjects)

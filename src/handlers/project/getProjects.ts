@@ -15,8 +15,8 @@ export default async function getProjects(req: FastifyRequest, res: FastifyReply
         const query = await loadSQL('getAllProjects.sql')
         const result = await run(query)
         return res.status(200).send(result.rows)
-    } catch (err) {
-        console.error(err)
+    } catch (error) {
+        console.log('Failed to fetch projects:', error)
         return res.status(500).send({ error: 'Failed to fetch projects' })
     }
 }

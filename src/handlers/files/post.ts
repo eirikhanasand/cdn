@@ -21,7 +21,7 @@ interface MultipartField<T = string> {
 
 export default async function postFile(req: FastifyRequest, res: FastifyReply) {
     if (!req.isMultipart?.()) {
-        return res.status(400).send({ error: "Request is not multipart" })
+        return res.status(400).send({ error: 'Request is not multipart' })
     }
 
     try {
@@ -42,6 +42,7 @@ export default async function postFile(req: FastifyRequest, res: FastifyReply) {
                 const fieldName = part.fieldname
                 const value = part.value
                 if (['name', 'description', 'path', 'type'].includes(fieldName)) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (parts as any)[fieldName] = value
                 }
             }
@@ -50,7 +51,7 @@ export default async function postFile(req: FastifyRequest, res: FastifyReply) {
         const { name, description, path, type, fileBuffer } = parts
 
         if (!name || !fileBuffer || !type) {
-            return res.status(400).send({ error: "Missing required fields: name, file, or type" })
+            return res.status(400).send({ error: 'Missing required fields: name, file, or type' })
         }
 
         const id = randomUUID().slice(0, 6)
@@ -76,7 +77,7 @@ export default async function postFile(req: FastifyRequest, res: FastifyReply) {
         return res.send({ id })
     } catch (error) {
         console.error(error)
-        return res.status(500).send({ error: "Internal server error" })
+        return res.status(500).send({ error: 'Internal server error' })
     }
 }
 

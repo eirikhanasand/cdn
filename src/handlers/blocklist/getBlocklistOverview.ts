@@ -67,7 +67,7 @@ export default async function getBlockListOverview(req: FastifyRequest, res: Fas
 
         return res.status(200).send(overview)
     } catch (error) {
-        console.error(`Error fetching blocklist overview:`, error)
+        console.error('Error fetching blocklist overview:', error)
         return res.status(500).send({ error: 'Failed to fetch blocklist overview' })
     }
 }

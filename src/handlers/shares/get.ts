@@ -11,7 +11,7 @@ export default async function getShare(req: FastifyRequest, res: FastifyReply) {
     }
 
     try {
-        const query = `SELECT * FROM shares WHERE id = $1`
+        const query = 'SELECT * FROM shares WHERE id = $1'
         let result = await run(query, [id])
         if (!result || !result.rowCount) {
             const user: string = req.headers['id'] as string || ''
@@ -40,6 +40,7 @@ export default async function getShare(req: FastifyRequest, res: FastifyReply) {
         const response = { ...data, ...readTime }
         return res.status(200).send(response)
     } catch (error) {
+        console.log(`Share ${id} not found:`, error)
         return res.status(404).send({ error: `Share ${id} not found` })
     }
 }

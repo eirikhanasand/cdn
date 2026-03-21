@@ -6,20 +6,20 @@ export default async function getFileByPath(req: FastifyRequest, res: FastifyRep
 
     try {
         const result = await run(
-            "SELECT id, name, description, data, type, path, uploaded_at FROM files WHERE path = $1",
+            'SELECT id, name, description, data, type, path, uploaded_at FROM files WHERE path = $1',
             [id]
         )
 
         if (result.rows.length === 0) {
-            return res.status(404).send({ error: "File not found" })
+            return res.status(404).send({ error: 'File not found' })
         }
 
         const file = result.rows[0]
-        res.header("Content-Type", file.type)
-        res.header("Content-Disposition", `inline; filename="${file.name}"`)
+        res.header('Content-Type', file.type)
+        res.header('Content-Disposition', `inline; filename="${file.name}"`)
         return res.send(file.data)
     } catch (error) {
         console.log(error)
-        res.status(500).send({ error: "Internal server error" })
+        res.status(500).send({ error: 'Internal server error' })
     }
 }

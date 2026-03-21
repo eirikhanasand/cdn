@@ -4,12 +4,12 @@ import run from '#utils/db.ts'
 export default async function checkPath(req: FastifyRequest, res: FastifyReply) {
     const { path } = req.query as { path: string }
     if (!path) {
-        return res.status(400).send({ error: "Path query parameter is required" })
+        return res.status(400).send({ error: 'Path query parameter is required' })
     }
 
     try {
         const result = await run(
-            "SELECT id FROM files WHERE path = $1 LIMIT 1",
+            'SELECT id FROM files WHERE path = $1 LIMIT 1',
             [path]
         )
 
@@ -20,6 +20,6 @@ export default async function checkPath(req: FastifyRequest, res: FastifyReply) 
         }
     } catch (error) {
         console.error(error)
-        return res.status(500).send({ error: "Internal server error" })
+        return res.status(500).send({ error: 'Internal server error' })
     }
 }

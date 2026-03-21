@@ -8,19 +8,19 @@ export default async function dynamicTPS(server: FastifyInstance, res: FastifyRe
 
         switch (range) {
             case 'day':
-                whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 day'`
+                whereClause = 'WHERE last_seen >= NOW() - INTERVAL \'1 day\''
                 intervalSeconds = 86400
                 break
             case 'week':
-                whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 week'`
+                whereClause = 'WHERE last_seen >= NOW() - INTERVAL \'1 week\''
                 intervalSeconds = 604800
                 break
             case 'month':
-                whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 month'`
+                whereClause = 'WHERE last_seen >= NOW() - INTERVAL \'1 month\''
                 intervalSeconds = 2592000
                 break
             case 'year':
-                whereClause = `WHERE last_seen >= NOW() - INTERVAL '1 year'`
+                whereClause = 'WHERE last_seen >= NOW() - INTERVAL \'1 year\''
                 intervalSeconds = 31536000
                 break
             case 'all':
@@ -28,8 +28,7 @@ export default async function dynamicTPS(server: FastifyInstance, res: FastifyRe
                 intervalSeconds = null
                 break
             default:
-                const response = server.cachedTPS
-                return res.status(response.status).type('application/json').send(response.data)
+                return res.status(server.cachedTPS.status).type('application/json').send(server.cachedTPS.data)
         }
 
         const query = `
@@ -39,7 +38,7 @@ export default async function dynamicTPS(server: FastifyInstance, res: FastifyRe
                 ${
                     intervalSeconds
                         ? `SUM(hits) / ${intervalSeconds} AS tps`
-                        : `SUM(hits) / GREATEST(EXTRACT(EPOCH FROM (MAX(last_seen) - MIN(first_seen))), 1) AS tps`
+                        : 'SUM(hits) / GREATEST(EXTRACT(EPOCH FROM (MAX(last_seen) - MIN(first_seen))), 1) AS tps'
                 }
             FROM request_logs_combined_mv
             ${whereClause}

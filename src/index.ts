@@ -34,8 +34,8 @@ fastify.decorate('install', (() => {
     const filePath = path.join(__dirname, 'static', 'install.sh')
     try {
         return Buffer.from(fs.readFileSync(filePath))
-    } catch (err) {
-        console.error('Failed to read install.sh:', err)
+    } catch (error) {
+        console.error('Failed to read install.sh:', error)
         return Buffer.from('')
     }
 })())
@@ -53,38 +53,38 @@ fastify.decorate('cachedSummary', {
 
 fastify.register(fp)
 fastify.register(websocketPlugin)
-fastify.register(ws, { prefix: "/api" })
-fastify.register(routes, { prefix: "/api" })
+fastify.register(ws, { prefix: '/api' })
+fastify.register(routes, { prefix: '/api' })
 
 fastify.get('/', getIndex)
 fastify.get('/robots.txt', async (_, res) => {
     const disallowedPaths = [
-        "/files",
-        "/share",
-        "/link",
-        "/words",
-        "/traffic",
-        "/blocklist",
-        "/files/*",
-        "/share/*",
-        "/link/*",
-        "/words/*",
-        "/traffic/*",
-        "/blocklist/*",
-        "/api/files",
-        "/api/share",
-        "/api/link",
-        "/api/words",
-        "/api/traffic",
-        "/api/blocklist",
-        "/api/files/*",
-        "/api/share/*",
-        "/api/link/*",
-        "/api/words/*",
-        "/api/blocklist/*",
-        "/api/traffic/*",
+        '/files',
+        '/share',
+        '/link',
+        '/words',
+        '/traffic',
+        '/blocklist',
+        '/files/*',
+        '/share/*',
+        '/link/*',
+        '/words/*',
+        '/traffic/*',
+        '/blocklist/*',
+        '/api/files',
+        '/api/share',
+        '/api/link',
+        '/api/words',
+        '/api/traffic',
+        '/api/blocklist',
+        '/api/files/*',
+        '/api/share/*',
+        '/api/link/*',
+        '/api/words/*',
+        '/api/blocklist/*',
+        '/api/traffic/*',
     ]
-    let content = "User-agent: *\n"
+    let content = 'User-agent: *\n'
     disallowedPaths.forEach(path => {
         content += `Disallow: ${path}\n`
     })

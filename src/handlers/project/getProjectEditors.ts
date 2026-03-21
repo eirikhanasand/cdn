@@ -34,8 +34,8 @@ export default async function getProjectEditors(req: FastifyRequest, res: Fastif
         const nonProjects = result.rows.filter(r => !r.has_children)
 
         return res.status(200).send({ projects, nonProjects })
-    } catch (err) {
-        console.error(err)
+    } catch (error) {
+        console.log('Failed to fetch projects:', error)
         return res.status(500).send({ error: 'Failed to fetch projects' })
     }
 }

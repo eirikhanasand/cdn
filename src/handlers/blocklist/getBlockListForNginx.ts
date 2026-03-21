@@ -18,7 +18,7 @@ export default async function getBlockListForNginx(req: FastifyRequest, res: Fas
             return res.status(401).send({ error: 'Unauthorized' })
         }
 
-        const query = `SELECT metric AS type, value FROM blocklist`
+        const query = 'SELECT metric AS type, value FROM blocklist'
         const result = await run(query)
         if (!result || !result.rowCount) {
             return res.status(200).send([])

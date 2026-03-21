@@ -40,7 +40,7 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                 // const result = await run('SELECT * FROM vms WHERE project_id = $1', [ancestorId])
                 // const vm: VM = result.rows[0]
                 // if (!vm) {
-                //     const createVM = await 
+                //     const createVM = await
                 //     const result = await run('INSERT INTO vms (project_id, vm_id, last_log) VALUES ($1, $2, \'{}\');')
                 // } else {
                 //     followShell(name, 'bash', connection)
@@ -83,7 +83,7 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                             GROUP BY domain
                             ORDER BY domain;
                         `
-                        let result = await run(realTimeQuery)
+                        const result = await run(realTimeQuery)
 
                         const domains = result.rows.map(row => ({
                             name: row.domain,
@@ -115,8 +115,8 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                         }
 
                         connection.send(JSON.stringify({ type: 'update', data: domains }))
-                    } catch (err) {
-                        console.error('Error fetching domain TPS:', err)
+                    } catch (error) {
+                        console.error('Error fetching domain TPS:', error)
                     }
                 }, 500)
 
@@ -125,10 +125,10 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                     removeClient(id, connection)
                 })
 
-                connection.on('error', (err) => {
+                connection.on('error', (error) => {
                     clearInterval(interval)
                     removeClient(id, connection)
-                    console.log(`WebSocket error: ${err}`)
+                    console.log('WebSocket error:', error)
                 })
             } catch (error) {
                 console.error('WebSocket setup error:', error)

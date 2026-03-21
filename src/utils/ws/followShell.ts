@@ -30,22 +30,22 @@ export default function followShell(connection: WebSocket, id: string, name: str
         internalWs.on('close', () => {
             try {
                 connection.close()
-            } catch (error) { 
+            } catch (error) {
                 console.log(`Error occured while closing connection for id ${id}: ${error}`)
             }
         })
 
         internalWs.on('error', (error) => {
-              console.error(`internalWs connection failed for ${id}:`, error.message)
-                if (connection.readyState === WebSocket.OPEN) {
-                    try {
-                        connection.send(JSON.stringify({ type: 'error', message: 'Internal shell connection failed', detail: error.message }))
-                    } catch (error) {
-                        console.error(`Send to client failed: ${error}`)
-                    }
+            console.error(`internalWs connection failed for ${id}:`, error.message)
+            if (connection.readyState === WebSocket.OPEN) {
+                try {
+                    connection.send(JSON.stringify({ type: 'error', message: 'Internal shell connection failed', detail: error.message }))
+                } catch (error) {
+                    console.error(`Send to client failed: ${error}`)
                 }
+            }
 
-                connection.close()
+            connection.close()
         })
 
         connection.on('message', (msg: Buffer) => {

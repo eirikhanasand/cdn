@@ -8,7 +8,7 @@ export default async function getLink(req: FastifyRequest, res: FastifyReply) {
         if (!id) {
             return res.status(400).send({ error: 'Missing link ID' })
         }
-        
+
         try {
             const result = await queryLinks(id)
             if (!result) {
@@ -17,6 +17,7 @@ export default async function getLink(req: FastifyRequest, res: FastifyReply) {
 
             return res.status(200).send(result)
         } catch (error) {
+            console.log('Link not found:', error)
             return res.status(404).send({ error: 'Link not found' })
         }
     } catch (error) {

@@ -55,7 +55,7 @@ function queueSave(id: string, content: string) {
         if (!entry) return
         try {
             await run(
-                `UPDATE vms SET last_log = last_log || $1, last_used = NOW() WHERE project_id = $2`,
+                'UPDATE vms SET last_log = last_log || $1, last_used = NOW() WHERE project_id = $2',
                 [[entry.content], id]
             )
 

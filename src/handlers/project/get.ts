@@ -35,8 +35,8 @@ export default async function getProject(req: FastifyRequest, res: FastifyReply)
         }
 
         return res.status(200).send({ tree: treeResult.rows, share })
-    } catch (err) {
-        console.error(`Error loading project ${alias}:`, err)
+    } catch (error) {
+        console.error(`Error loading project ${alias}:`, error)
         return res.status(500).send({ error: 'Failed to load project' })
     }
 }

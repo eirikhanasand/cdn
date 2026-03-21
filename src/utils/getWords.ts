@@ -1,4 +1,4 @@
-import words from "../static/words.json" with { "type": "json" }
+import words from '../static/words.json' with { 'type': 'json' }
 
 const defaultQuery = {
     categories: 'animals,fruits,numbers,cities',
@@ -14,27 +14,27 @@ export default function getWords(query: { categories: string, count: string, max
         maxLength = '20',
     } = query
 
-    const selectedCategories = catQuery.split(",").map(c => c.trim().toLowerCase())
+    const selectedCategories = catQuery.split(',').map(c => c.trim().toLowerCase())
     const countNum = Math.min(Math.max(parseInt(count), 1), 100)
     const maxLen = parseInt(maxLength)
     const categoryMap: Record<string, string[]> = { animals, fruits, numbers, cities }
 
-    if (!selectedCategories.includes("cities")) {
-        selectedCategories.push("cities")
+    if (!selectedCategories.includes('cities')) {
+        selectedCategories.push('cities')
     }
 
     const results: string[] = []
 
     for (let i = 0; i < countNum; i++) {
-        let name = ""
+        let name = ''
         let attempts = 0
 
         while (attempts < 10000) {
             const word3 = cities[Math.floor(Math.random() * cities.length)]
-            const otherCats = selectedCategories.filter(c => c !== "cities")
+            const otherCats = selectedCategories.filter(c => c !== 'cities')
 
-            let word1 = ""
-            let word2 = ""
+            let word1 = ''
+            let word2 = ''
 
             if (otherCats.length >= 2) {
                 const shuffled = otherCats.sort(() => 0.5 - Math.random())
@@ -44,7 +44,7 @@ export default function getWords(query: { categories: string, count: string, max
                 word1 = categoryMap[otherCats[0]][Math.floor(Math.random() * categoryMap[otherCats[0]].length)]
             }
 
-            name = [word1, word2, word3].filter(Boolean).join("-")
+            name = [word1, word2, word3].filter(Boolean).join('-')
 
             if (name.length <= maxLen) {
                 break

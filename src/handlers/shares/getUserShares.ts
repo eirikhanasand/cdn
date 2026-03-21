@@ -22,8 +22,8 @@ export default async function getUserShares(req: FastifyRequest, res: FastifyRep
         const result = await run(query, [id])
 
         return res.status(200).send(result.rows)
-    } catch (err) {
-        console.error(err)
+    } catch (error) {
+        console.error('Failed to fetch user shares:', error)
         return res.status(500).send({ error: 'Failed to fetch user shares' })
     }
 }

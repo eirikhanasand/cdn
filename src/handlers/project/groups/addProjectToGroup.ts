@@ -35,8 +35,8 @@ export default async function addProjectsToGroup(req: FastifyRequest, res: Fasti
         })
         await Promise.all(inserts)
         return res.status(200).send({ success: true })
-    } catch (err) {
-        console.error('Failed to add projects to group', err)
+    } catch (error) {
+        console.error('Failed to add projects to group:', error)
         return res.status(500).send({ error: 'Failed to add projects to group' })
     }
 }

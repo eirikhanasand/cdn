@@ -14,7 +14,7 @@ type Permissions = {
     editors?: string[]
 }
 
-type PermissionsWrapperResponse = { 
+type PermissionsWrapperResponse = {
     status: boolean
     permissions: string[] | null
 }

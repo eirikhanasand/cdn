@@ -20,7 +20,7 @@ export default async function getBlockList(req: FastifyRequest, res: FastifyRepl
 
         const { metric, value } = req.query as { metric?: string; value?: string }
         const conditions: string[] = []
-        const params: any[] = []
+        const params: string[] = []
 
         if (metric) {
             params.push(metric)

@@ -38,12 +38,12 @@ export default async function deleteProject(req: FastifyRequest, res: FastifyRep
         }
 
         const allIds = treeResult.rows.map(r => r.id)
-        const deleteQuery = `DELETE FROM shares WHERE id = ANY($1::text[])`
+        const deleteQuery = 'DELETE FROM shares WHERE id = ANY($1::text[])'
         await run(deleteQuery, [allIds])
 
         return res.status(200).send({ deleted: allIds })
     } catch (error) {
-        console.log(`Error deleting project: ${error}`)
+        console.log('Error deleting project', error)
         return res.status(500).send({ error: 'Failed to delete project' })
     }
 }

@@ -31,8 +31,8 @@ export default async function removeShareEditors(req: FastifyRequest, res: Fasti
         }
 
         return res.status(200).send(result.rows[0])
-    } catch (err) {
-        console.error(`Error removing editors from share:`, err)
+    } catch (error) {
+        console.error('Error removing editors from share:', error)
         return res.status(500).send({ error: 'Failed to remove editors' })
     }
 }

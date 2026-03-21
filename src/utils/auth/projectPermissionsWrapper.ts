@@ -14,7 +14,13 @@ type Permissions = {
     editors: string[]
 }
 
-export default async function projectPermissionsWrapper({ userId, projectId }: PermissionsProps): Promise<{ status: boolean, permissions: string[] | null }> {
+export default async function projectPermissionsWrapper({
+    userId,
+    projectId
+}: PermissionsProps): Promise<{
+    status: boolean,
+    permissions: string[] | null
+}> {
     const query = await loadSQL('checkProjectPermissions.sql')
     const result = await run(query, [userId, projectId])
     const data = result.rows[0] as Permissions

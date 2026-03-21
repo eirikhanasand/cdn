@@ -33,8 +33,8 @@ export default async function listGroupsByEditor(req: FastifyRequest, res: Fasti
         `
         const result = await run(query, [id])
         return res.status(200).send(result.rows)
-    } catch (err) {
-        console.error('Failed to list groups by editor', err)
+    } catch (error) {
+        console.error('Failed to list groups by editor:', error)
         return res.status(500).send({ error: 'Failed to list groups' })
     }
 }
