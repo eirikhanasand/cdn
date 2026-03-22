@@ -1,9 +1,9 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import run from '#utils/db.ts'
 import loadSQL from '#utils/loadSQL.ts'
 import queryShare from '#utils/share/queryShare.ts'
 import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import buildTree from '#utils/share/buildTree.ts'
+import run from '#db'
 
 export default async function getTree(req: FastifyRequest, res: FastifyReply) {
     const { id } = req.params as { id: string }

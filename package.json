@@ -32,6 +32,6 @@
   "imports": {
     "#constants": "./src/constants.ts",
     "#utils/*": "./src/utils/*",
-    "#db": "./src/db.ts"
+    "#db": "./src/utils/db.ts"
   }
 }

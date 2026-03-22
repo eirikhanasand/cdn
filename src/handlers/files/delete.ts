@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import run from '#utils/db.ts'
+import run from '#db'
 import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import filePermissionsWrapper from '#utils/auth/filePermissionsWrapper.ts'
 

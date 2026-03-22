@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import run from '#utils/db.ts'
 import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import filePermissionsWrapper from '#utils/auth/filePermissionsWrapper.ts'
+import run from '#db'
 
 type PutFileProps = {
     name?: string
@@ -32,6 +32,7 @@ export default async function putFile(req: FastifyRequest, res: FastifyReply) {
     }
 
     const updates: string[] = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const values: any[] = []
     let index = 1
 

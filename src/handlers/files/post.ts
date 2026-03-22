@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import run from '#utils/db.ts'
 import { randomUUID } from 'crypto'
+import run from '#db'
 
 type MultipartValue<T = unknown> = MultipartFile | MultipartField<T>
 

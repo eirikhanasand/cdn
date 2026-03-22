@@ -1,6 +1,8 @@
 import pg from 'pg'
 import config from '#constants'
 
+type SQLParamType = (string | number | null | boolean | string[] | Date | Buffer)[]
+
 const {
     DB,
     DB_USER,
@@ -12,6 +14,9 @@ const {
     DB_TIMEOUT_MS
 } = config
 const { Pool } = pg
+
+let lastPoolUnavailableLogAt = 0
+
 const pool = new Pool({
     user: DB_USER || 'cdn',
     host: DB_HOST,
@@ -34,8 +39,20 @@ export default async function run(query: string, params?: SQLParamType) {
                 client.release()
             }
         } catch (error) {
-            console.log(`Pool currently unavailable, retrying in ${config.CACHE_TTL / 1000}s... Details:`, error)
-            await sleep(config.CACHE_TTL)
+            const ttlMs = config.DB_CACHE_TTL
+            const now = Date.now()
+
+            if (
+                lastPoolUnavailableLogAt === 0 ||
+                now - lastPoolUnavailableLogAt >= ttlMs
+            ) {
+                lastPoolUnavailableLogAt = now
+                const ts = new Date().toISOString()
+                console.log(`[${ts}] Pool currently unavailable, retrying in ${ttlMs / 1000}s...`)
+                console.log(error)
+            }
+
+            await sleep(ttlMs)
         }
     }
 }

@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import run from '#utils/db.ts'
+import run from '#db'
 
 export default async function getFileByPath(req: FastifyRequest, res: FastifyReply) {
     const { id } = req.params as { id: string }

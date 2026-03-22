@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import run from '#utils/db.ts'
+import run from '#db'
 
 export default async function checkPath(req: FastifyRequest, res: FastifyReply) {
     const { path } = req.query as { path: string }
