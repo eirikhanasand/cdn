@@ -24,18 +24,18 @@ EOF
 psql "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}" <<EOF
 CREATE UNIQUE INDEX IF NOT EXISTS request_logs_combined_mv_unique_idx
 ON request_logs_combined_mv(id);
-CREATE INDEX idx_request_logs_ip
+CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_ip
 ON request_logs_combined_mv(ip);
-CREATE INDEX idx_request_logs_user_agent
+CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_user_agent
 ON request_logs_combined_mv(user_agent);
-CREATE INDEX idx_request_logs_ip_path
+CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_ip_path
 ON request_logs_combined_mv(ip, path);
-CREATE INDEX idx_request_logs_ua_path
+CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_ua_path
 ON request_logs_combined_mv(user_agent, path);
-CREATE INDEX idx_request_logs_last_seen_recent
+CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_last_seen_recent
 ON request_logs_combined_mv(last_seen)
 WHERE last_seen >= NOW() - INTERVAL '7 day';
-CREATE INDEX idx_request_logs_domain
+CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_domain
 ON request_logs_combined_mv(domain);
 EOF
 
