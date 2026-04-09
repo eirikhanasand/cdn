@@ -94,8 +94,10 @@ fastify.get('/robots.txt', async (_, res) => {
 
 async function start() {
     try {
-        await ensureSchema()
         await fastify.listen({ port, host: '0.0.0.0' })
+        void ensureSchema().catch(error => {
+            fastify.log.error(error)
+        })
     } catch (error) {
         fastify.log.error(error)
         process.exit(1)

@@ -73,9 +73,6 @@ export default fp(async (fastify) => {
         }
     }
 
-    await refreshQueriesHot()
-    await refreshQueriesCold()
-
-    setTimeout(safelyRefreshHot, config.CACHE_TTL_HOT)
-    setTimeout(safelyRefreshCold, config.CACHE_TTL_COLD)
+    setTimeout(safelyRefreshHot, 0)
+    setTimeout(safelyRefreshCold, 0)
 })
