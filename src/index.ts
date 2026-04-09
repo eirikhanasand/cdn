@@ -6,6 +6,7 @@ import websocketPlugin from '@fastify/websocket'
 import fastifyMultipart from '@fastify/multipart'
 import ws from './plugins/ws.ts'
 import fp from '#utils/refresh/fp.ts'
+import ensureSchema from '#utils/schema.ts'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
@@ -93,6 +94,7 @@ fastify.get('/robots.txt', async (_, res) => {
 
 async function start() {
     try {
+        await ensureSchema()
         await fastify.listen({ port, host: '0.0.0.0' })
     } catch (error) {
         fastify.log.error(error)

@@ -6,33 +6,76 @@ import tps from './queries/tps.ts'
 import summary from './queries/summary.ts'
 
 export default fp(async (fastify) => {
+    let hotRefreshRunning = false
+    let coldRefreshRunning = false
+
     async function refreshQueriesHot() {
-        const newTPS = await tps()
-        fastify.cachedTPS = { status: newTPS.status, data: Buffer.from(JSON.stringify(newTPS.data)) }
-        fastify.log.info('Hot cached queries refreshed')
+        if (hotRefreshRunning) {
+            return
+        }
+
+        hotRefreshRunning = true
+        try {
+            const newTPS = await tps()
+            fastify.cachedTPS = { status: newTPS.status, data: Buffer.from(JSON.stringify(newTPS.data)) }
+            fastify.log.info('Hot cached queries refreshed')
+        } finally {
+            hotRefreshRunning = false
+        }
     }
 
     async function refreshQueriesCold() {
-        const newUA = await ua()
-        const newIP = await ip()
-        const newSummary = await summary()
-
-        fastify.cachedUAMetrics = { status: newUA.status, data: Buffer.from(JSON.stringify(newUA.data)) }
-        fastify.cachedIPMetrics = { status: newIP.status, data: Buffer.from(JSON.stringify(newIP.data)) }
-        fastify.cachedSummary = {
-            status: newSummary.status, data: {
-                path: Buffer.from(JSON.stringify(newSummary.data.path || [])),
-                ip: Buffer.from(JSON.stringify(newSummary.data.ip || [])),
-                user_agent: Buffer.from(JSON.stringify(newSummary.data.ua || [])),
-            }
+        if (coldRefreshRunning) {
+            return
         }
 
-        fastify.log.info('Cold cached queries refreshed')
+        coldRefreshRunning = true
+        try {
+            const newUA = await ua()
+            const newIP = await ip()
+            const newSummary = await summary()
+
+            fastify.cachedUAMetrics = { status: newUA.status, data: Buffer.from(JSON.stringify(newUA.data)) }
+            fastify.cachedIPMetrics = { status: newIP.status, data: Buffer.from(JSON.stringify(newIP.data)) }
+            fastify.cachedSummary = {
+                status: newSummary.status, data: {
+                    path: Buffer.from(JSON.stringify(newSummary.data.path || [])),
+                    ip: Buffer.from(JSON.stringify(newSummary.data.ip || [])),
+                    user_agent: Buffer.from(JSON.stringify(newSummary.data.ua || [])),
+                }
+            }
+
+            fastify.log.info('Cold cached queries refreshed')
+        } finally {
+            coldRefreshRunning = false
+        }
     }
 
-    refreshQueriesHot()
-    refreshQueriesCold()
+    async function safelyRefreshHot() {
+        try {
+            await refreshQueriesHot()
+        } catch (error) {
+            hotRefreshRunning = false
+            fastify.log.error(error)
+        } finally {
+            setTimeout(safelyRefreshHot, config.CACHE_TTL_HOT)
+        }
+    }
 
-    setInterval(refreshQueriesHot, config.CACHE_TTL_HOT)
-    setInterval(refreshQueriesCold, config.CACHE_TTL_COLD)
+    async function safelyRefreshCold() {
+        try {
+            await refreshQueriesCold()
+        } catch (error) {
+            coldRefreshRunning = false
+            fastify.log.error(error)
+        } finally {
+            setTimeout(safelyRefreshCold, config.CACHE_TTL_COLD)
+        }
+    }
+
+    await refreshQueriesHot()
+    await refreshQueriesCold()
+
+    setTimeout(safelyRefreshHot, config.CACHE_TTL_HOT)
+    setTimeout(safelyRefreshCold, config.CACHE_TTL_COLD)
 })

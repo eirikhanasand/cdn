@@ -2,6 +2,8 @@ import pg from 'pg'
 import config from '#constants'
 
 type SQLParamType = (string | number | null | boolean | string[] | Date | Buffer)[]
+type QueryResultRow = pg.QueryResultRow
+type PoolClient = pg.PoolClient
 
 const {
     DB,
@@ -30,11 +32,15 @@ const pool = new Pool({
 })
 
 export default async function run(query: string, params?: SQLParamType) {
+    return withClient(client => client.query(query, params ?? []))
+}
+
+export async function withClient<T = pg.QueryResult<QueryResultRow>>(callback: (client: PoolClient) => Promise<T>) {
     while (true) {
         try {
             const client = await pool.connect()
             try {
-                return await client.query(query, params ?? [])
+                return await callback(client)
             } finally {
                 client.release()
             }

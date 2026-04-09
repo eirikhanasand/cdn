@@ -126,6 +126,32 @@ CREATE TABLE IF NOT EXISTS request_logs_all (
     last_seen TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS request_metric_totals (
+    metric_type TEXT NOT NULL CHECK (metric_type IN ('path', 'ip', 'user_agent')),
+    metric_value TEXT NOT NULL,
+    hits_total BIGINT NOT NULL DEFAULT 0,
+    last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (metric_type, metric_value)
+);
+
+CREATE TABLE IF NOT EXISTS request_metric_recent_hourly (
+    metric_type TEXT NOT NULL CHECK (metric_type IN ('path', 'ip', 'user_agent')),
+    metric_value TEXT NOT NULL,
+    bucket TIMESTAMPTZ NOT NULL,
+    hits BIGINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (metric_type, metric_value, bucket)
+);
+
+CREATE TABLE IF NOT EXISTS request_metric_relations (
+    primary_type TEXT NOT NULL CHECK (primary_type IN ('ip', 'user_agent')),
+    primary_value TEXT NOT NULL,
+    relation_type TEXT NOT NULL CHECK (relation_type IN ('path', 'ip', 'user_agent')),
+    relation_value TEXT NOT NULL,
+    hits_total BIGINT NOT NULL DEFAULT 0,
+    last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (primary_type, primary_value, relation_type, relation_value)
+);
+
 -- Updates updated at when insert happens
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -148,19 +174,13 @@ CREATE INDEX IF NOT EXISTS shares_alias_idx ON shares(alias);
 CREATE INDEX IF NOT EXISTS idx_shares_type ON shares(type);
 CREATE INDEX IF NOT EXISTS idx_shares_locked ON shares(locked);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_vms ON vms(vm_id);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_last_seen ON request_logs(last_seen);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_domain ON request_logs(domain);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_identity ON request_logs(domain, ip, user_agent, path);
+CREATE INDEX IF NOT EXISTS idx_request_logs_last_seen ON request_logs(last_seen DESC);
+CREATE INDEX IF NOT EXISTS idx_request_logs_domain ON request_logs(domain);
+CREATE INDEX IF NOT EXISTS idx_request_logs_all_last_seen ON request_logs_all(last_seen DESC);
+CREATE INDEX IF NOT EXISTS idx_request_logs_all_domain ON request_logs_all(domain);
 CREATE INDEX IF NOT EXISTS idx_project_group_members_group ON project_group_members(group_id);
 CREATE INDEX IF NOT EXISTS idx_project_group_members_share ON project_group_members(share_id);
-SET work_mem = '512MB';
-SET max_parallel_workers_per_gather = 4;
-SET max_parallel_workers = 8;
-
-CREATE MATERIALIZED VIEW request_logs_combined_mv AS
-SELECT * FROM request_logs_all
-UNION ALL
-SELECT * FROM request_logs;
-
-CREATE INDEX idx_combined_ip ON request_logs_combined_mv(ip);
-CREATE INDEX idx_combined_path ON request_logs_combined_mv(path);
-CREATE INDEX idx_combined_user_agent ON request_logs_combined_mv(user_agent);
+CREATE INDEX IF NOT EXISTS idx_request_metric_totals_lookup ON request_metric_totals(metric_type, hits_total DESC, metric_value);
+CREATE INDEX IF NOT EXISTS idx_request_metric_recent_hourly_lookup ON request_metric_recent_hourly(metric_type, bucket DESC, metric_value);
+CREATE INDEX IF NOT EXISTS idx_request_metric_relations_lookup ON request_metric_relations(primary_type, primary_value, relation_type, hits_total DESC, relation_value);

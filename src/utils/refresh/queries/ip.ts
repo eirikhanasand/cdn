@@ -14,10 +14,10 @@ type IPMetrics = {
 export default async function ip() {
     try {
         const topIpsQuery = `
-            SELECT ip, SUM(hits) AS total_hits
-            FROM request_logs_combined_mv
-            GROUP BY ip
-            ORDER BY total_hits DESC
+            SELECT metric_value AS ip, hits_total AS total_hits
+            FROM request_metric_totals
+            WHERE metric_type = 'ip'
+            ORDER BY hits_total DESC
             LIMIT 5
         `
         const topIpsResult = await run(topIpsQuery)
@@ -31,11 +31,12 @@ export default async function ip() {
 
         for (const ip of ips) {
             const topPathsQuery = `
-                SELECT path, SUM(hits) AS hits
-                FROM request_logs_combined_mv
-                WHERE ip = $1
-                GROUP BY path
-                ORDER BY hits DESC
+                SELECT relation_value AS path, hits_total AS hits
+                FROM request_metric_relations
+                WHERE primary_type = 'ip'
+                  AND primary_value = $1
+                  AND relation_type = 'path'
+                ORDER BY hits_total DESC
                 LIMIT 3
             `
             const topPathsResult = await run(topPathsQuery, [ip])
@@ -45,11 +46,12 @@ export default async function ip() {
             }))
 
             const topUaQuery = `
-                SELECT user_agent, SUM(hits) AS hits
-                FROM request_logs_combined_mv
-                WHERE ip = $1
-                GROUP BY user_agent
-                ORDER BY hits DESC
+                SELECT relation_value AS user_agent, hits_total AS hits
+                FROM request_metric_relations
+                WHERE primary_type = 'ip'
+                  AND primary_value = $1
+                  AND relation_type = 'user_agent'
+                ORDER BY hits_total DESC
                 LIMIT 1
             `
             const topUaResult = await run(topUaQuery, [ip])

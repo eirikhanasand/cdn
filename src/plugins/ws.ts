@@ -5,7 +5,6 @@ import removeClient from '#utils/ws/removeClient.ts'
 import handleShareMessage from '#utils/ws/handleShareMessage.ts'
 import handleTerminalMessage from '#utils/ws/handleTerminalMessage.ts'
 import followShell from '#utils/ws/followShell.ts'
-import run from '#db'
 // import run from '#db'
 // import loadSQL from '#utils/loadSQL.ts'
 
@@ -73,52 +72,12 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
             try {
                 const interval = setInterval(async () => {
                     try {
-                        const realTimeQuery = `
-                            SELECT
-                                domain,
-                                SUM(hits) AS hits,
-                                SUM(hits) / 30.0 AS tps
-                            FROM request_logs
-                            WHERE last_seen >= NOW() - INTERVAL '30 seconds'
-                            GROUP BY domain
-                            ORDER BY domain;
-                        `
-                        const result = await run(realTimeQuery)
-
-                        const domains = result.rows.map(row => ({
-                            name: row.domain,
-                            hits: Number(row.hits),
-                            tps: Number(row.tps),
-                        }))
-
-                        const lowTrafficDomains = domains.filter(d => d.tps < 3)
-                        if (lowTrafficDomains.length > 0) {
-                            const names = lowTrafficDomains.map(d => `'${d.name}'`).join(',')
-                            const fallbackQuery = `
-                                SELECT
-                                    domain,
-                                    SUM(hits) AS hits,
-                                    SUM(hits) / 30.0 AS tps  -- aggregate over last 30 seconds
-                                FROM request_logs
-                                WHERE last_seen >= NOW() - INTERVAL '30 seconds'
-                                AND domain IN (${names})
-                                GROUP BY domain
-                            `
-                            const fallbackResult = await run(fallbackQuery)
-                            fallbackResult.rows.forEach(row => {
-                                const idx = domains.findIndex(d => d.name === row.domain)
-                                if (idx >= 0) {
-                                    domains[idx].hits = Number(row.hits)
-                                    domains[idx].tps = Number(row.tps)
-                                }
-                            })
-                        }
-
+                        const domains = JSON.parse(fastify.cachedTPS.data.toString())
                         connection.send(JSON.stringify({ type: 'update', data: domains }))
                     } catch (error) {
                         console.error('Error fetching domain TPS:', error)
                     }
-                }, 500)
+                }, 2000)
 
                 connection.on('close', () => {
                     clearInterval(interval)

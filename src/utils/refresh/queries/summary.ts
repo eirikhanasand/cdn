@@ -2,9 +2,9 @@ import run from '#db'
 
 export default async function summary() {
     try {
-        const resultPath = await run(query('path'))
-        const resultIP = await run(query('ip'))
-        const resultUA = await run(query('user_agent'))
+        const resultPath = await run(query(), ['path'])
+        const resultIP = await run(query(), ['ip'])
+        const resultUA = await run(query(), ['user_agent'])
         const path = resultPath.rows
         const ip = resultIP.rows
         const ua = resultUA.rows
@@ -16,16 +16,28 @@ export default async function summary() {
     }
 }
 
-function query(metric: string) {
+function query() {
     return `
-        SELECT 
-            ${metric} AS value,
-            SUM(hits) FILTER (WHERE last_seen >= NOW() - INTERVAL '1 day') AS hits_today,
-            SUM(hits) FILTER (WHERE last_seen >= NOW() - INTERVAL '7 day') AS hits_last_week,
-            SUM(hits) AS hits_total
-        FROM request_logs_combined_mv
-        GROUP BY ${metric}
-        ORDER BY hits_today DESC
+        WITH recent AS (
+            SELECT
+                metric_value AS value,
+                SUM(hits) FILTER (WHERE bucket >= date_trunc('hour', NOW()) - INTERVAL '1 day') AS hits_today,
+                SUM(hits) FILTER (WHERE bucket >= date_trunc('hour', NOW()) - INTERVAL '7 day') AS hits_last_week
+            FROM request_metric_recent_hourly
+            WHERE metric_type = $1
+              AND bucket >= date_trunc('hour', NOW()) - INTERVAL '7 day'
+            GROUP BY metric_value
+        )
+        SELECT
+            recent.value,
+            COALESCE(recent.hits_today, 0) AS hits_today,
+            COALESCE(recent.hits_last_week, 0) AS hits_last_week,
+            COALESCE(totals.hits_total, 0) AS hits_total
+        FROM recent
+        LEFT JOIN request_metric_totals AS totals
+          ON totals.metric_type = $1
+         AND totals.metric_value = recent.value
+        ORDER BY recent.hits_today DESC, recent.hits_last_week DESC, totals.hits_total DESC
         LIMIT 5
     `
 }
