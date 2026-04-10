@@ -12,6 +12,10 @@ services:
       - postgres
     env_file:
       .env
+    environment:
+      API_URL: ${API_URL:-https://api.hanasand.com/api}
+      INTERNAL_API: ${INTERNAL_API:-https://internal.hanasand.com/api}
+      INTERNAL_WSS: ${INTERNAL_WSS:-wss://internal.hanasand.com/api/ws}
     ports:
       - "8501:8080"
 

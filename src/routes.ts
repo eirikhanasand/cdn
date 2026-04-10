@@ -57,9 +57,9 @@ export default async function apiRoutes(fastify: FastifyInstance) {
     fastify.get('/install.sh', getInstall)
 
     // files
-    fastify.get('/files/:id', getFile)
     fastify.get('/files/check', checkPath)
     fastify.get('/files/path/:id', getFileByPath)
+    fastify.get('/files/:id', getFile)
     fastify.put('/files/:id', putFile)
     fastify.post('/files', postFile)
     fastify.delete('/files/:id', deleteFile)
@@ -87,9 +87,9 @@ export default async function apiRoutes(fastify: FastifyInstance) {
     fastify.delete('/project/:alias', deleteProject)
 
     // project groups
-    fastify.get('/project/group/:id', listProjectsInGroup)
     fastify.get('/project/group/owner/:id', listGroupsByOwner)
     fastify.get('/project/group/editor/:id', listGroupsByEditor)
+    fastify.get('/project/group/:id', listProjectsInGroup)
     fastify.post('/project/group/:id', createProjectGroup)
     fastify.post('/project/group/add/:id', addProjectsToGroup)
     fastify.post('/project/group/remove/:id', removeProjectsFromGroup)

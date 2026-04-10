@@ -13,7 +13,7 @@ export default async function deleteBlocklist(req: FastifyRequest, res: FastifyR
             return res.status(401).send({ error: 'Unauthorized' })
         }
 
-        const allowed = await hasRole({ id: userId, role: 'system_admin' })
+        const allowed = await hasRole({ id: userId, role: 'system_admin', token })
         if (!allowed) {
             return res.status(401).send({ error: 'Unauthorized' })
         }

@@ -1,5 +1,4 @@
 import run from '#db'
-import projectPermissionsWrapper from '#utils/auth/projectPermissionsWrapper.ts'
 import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
@@ -17,8 +16,7 @@ export default async function listGroupsByEditor(req: FastifyRequest, res: Fasti
         return res.status(401).send({ error: 'Unauthorized' })
     }
 
-    const allowed = await projectPermissionsWrapper({ userId, projectId: id })
-    if (!allowed.status) {
+    if (userId !== id) {
         return res.status(401).send({ error: 'Unauthorized' })
     }
 

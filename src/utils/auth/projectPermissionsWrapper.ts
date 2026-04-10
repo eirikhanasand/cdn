@@ -23,7 +23,11 @@ export default async function projectPermissionsWrapper({
 }> {
     const query = await loadSQL('checkProjectPermissions.sql')
     const result = await run(query, [userId, projectId])
-    const data = result.rows[0] as Permissions
+    const data = result.rows[0] as Permissions | undefined
+
+    if (!data) {
+        return { status: false, permissions: null }
+    }
 
     if (data.owner !== userId && !data.editors.includes(userId)) {
         return { status: false, permissions: null }

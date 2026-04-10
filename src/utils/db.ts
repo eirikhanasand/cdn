@@ -4,6 +4,7 @@ import config from '#constants'
 type SQLParamType = (string | number | null | boolean | string[] | Date | Buffer)[]
 type QueryResultRow = pg.QueryResultRow
 type PoolClient = pg.PoolClient
+type PgError = Error & { code?: string }
 
 const {
     DB,
@@ -45,6 +46,10 @@ export async function withClient<T = pg.QueryResult<QueryResultRow>>(callback: (
                 client.release()
             }
         } catch (error) {
+            if (!isTransientDatabaseError(error)) {
+                throw error
+            }
+
             const ttlMs = config.DB_CACHE_TTL
             const now = Date.now()
 
@@ -61,6 +66,29 @@ export async function withClient<T = pg.QueryResult<QueryResultRow>>(callback: (
             await sleep(ttlMs)
         }
     }
+}
+
+function isTransientDatabaseError(error: unknown) {
+    const err = error as PgError
+    const message = err?.message?.toLowerCase() || ''
+    const retryableCodes = new Set([
+        'ECONNREFUSED',
+        'ECONNRESET',
+        'ETIMEDOUT',
+        'ENOTFOUND',
+        'EAI_AGAIN',
+        '08000',
+        '08001',
+        '08003',
+        '08006',
+        '53300',
+        '57P03',
+    ])
+
+    return Boolean(err?.code && retryableCodes.has(err.code))
+        || message.includes('connection terminated')
+        || message.includes('connection timeout')
+        || message.includes('timeout expired')
 }
 
 function sleep(ms: number) {
