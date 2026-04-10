@@ -8,7 +8,10 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "node src/index.ts",
-    "lint": "eslint --fix ./src"
+    "lint": "eslint --fix ./src",
+    "test:e2e": "node scripts/run-playwright-status.mjs",
+    "test:e2e:traffic": "node scripts/run-playwright-status.mjs tests/traffic.spec.ts",
+    "audit:api": "node scripts/run-audit-status.mjs"
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",
@@ -25,6 +28,7 @@
     "ws": "^8.19.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.51.1",
     "@types/node": "^25.5.0",
     "@types/pg": "^8.20.0",
     "@types/ws": "^8.18.1"

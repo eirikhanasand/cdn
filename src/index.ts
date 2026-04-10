@@ -52,7 +52,6 @@ fastify.decorate('cachedSummary', {
     }
 })
 
-fastify.register(fp)
 fastify.register(websocketPlugin)
 fastify.register(ws, { prefix: '/api' })
 fastify.register(routes, { prefix: '/api' })
@@ -94,10 +93,9 @@ fastify.get('/robots.txt', async (_, res) => {
 
 async function start() {
     try {
+        await ensureSchema()
+        fastify.register(fp)
         await fastify.listen({ port, host: '0.0.0.0' })
-        void ensureSchema().catch(error => {
-            fastify.log.error(error)
-        })
     } catch (error) {
         fastify.log.error(error)
         process.exit(1)

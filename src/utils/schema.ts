@@ -4,7 +4,7 @@ export default async function ensureSchema() {
     await withClient(async (client) => {
         await client.query(`
             CREATE TABLE IF NOT EXISTS request_metric_totals (
-                metric_type TEXT NOT NULL CHECK (metric_type IN ('path', 'ip', 'user_agent')),
+                metric_type TEXT NOT NULL CHECK (metric_type IN ('path', 'ip', 'user_agent', 'domain')),
                 metric_value TEXT NOT NULL,
                 hits_total BIGINT NOT NULL DEFAULT 0,
                 last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -12,12 +12,33 @@ export default async function ensureSchema() {
             );
 
             CREATE TABLE IF NOT EXISTS request_metric_recent_hourly (
-                metric_type TEXT NOT NULL CHECK (metric_type IN ('path', 'ip', 'user_agent')),
+                metric_type TEXT NOT NULL CHECK (metric_type IN ('path', 'ip', 'user_agent', 'domain')),
                 metric_value TEXT NOT NULL,
                 bucket TIMESTAMPTZ NOT NULL,
                 hits BIGINT NOT NULL DEFAULT 0,
                 PRIMARY KEY (metric_type, metric_value, bucket)
             );
+
+            CREATE TABLE IF NOT EXISTS request_metric_live_tps (
+                domain TEXT NOT NULL,
+                bucket TIMESTAMPTZ NOT NULL,
+                hits BIGINT NOT NULL DEFAULT 0,
+                PRIMARY KEY (domain, bucket)
+            );
+
+            ALTER TABLE request_metric_totals
+            DROP CONSTRAINT IF EXISTS request_metric_totals_metric_type_check;
+
+            ALTER TABLE request_metric_recent_hourly
+            DROP CONSTRAINT IF EXISTS request_metric_recent_hourly_metric_type_check;
+
+            ALTER TABLE request_metric_totals
+            ADD CONSTRAINT request_metric_totals_metric_type_check
+            CHECK (metric_type IN ('path', 'ip', 'user_agent', 'domain'));
+
+            ALTER TABLE request_metric_recent_hourly
+            ADD CONSTRAINT request_metric_recent_hourly_metric_type_check
+            CHECK (metric_type IN ('path', 'ip', 'user_agent', 'domain'));
 
             CREATE TABLE IF NOT EXISTS request_metric_relations (
                 primary_type TEXT NOT NULL CHECK (primary_type IN ('ip', 'user_agent')),
@@ -57,6 +78,9 @@ export default async function ensureSchema() {
 
             CREATE INDEX IF NOT EXISTS idx_request_metric_relations_lookup
             ON request_metric_relations(primary_type, primary_value, relation_type, hits_total DESC, relation_value);
+
+            CREATE INDEX IF NOT EXISTS idx_request_metric_live_tps_bucket
+            ON request_metric_live_tps(bucket DESC);
         `)
 
         const totalsCount = await client.query<{ count: string }>('SELECT COUNT(*)::text AS count FROM request_metric_totals')
@@ -186,8 +210,74 @@ export default async function ensureSchema() {
         }
 
         await client.query(`
+            WITH combined AS (
+                SELECT domain, hits, last_seen
+                FROM request_logs_all
+                UNION ALL
+                SELECT domain, hits, last_seen
+                FROM request_logs
+            )
+            INSERT INTO request_metric_totals (metric_type, metric_value, hits_total, last_seen)
+            SELECT
+                'domain'::text AS metric_type,
+                domain AS metric_value,
+                SUM(hits)::bigint AS hits_total,
+                MAX(last_seen) AS last_seen
+            FROM combined
+            GROUP BY domain
+            ON CONFLICT (metric_type, metric_value)
+            DO UPDATE SET
+                hits_total = EXCLUDED.hits_total,
+                last_seen = GREATEST(request_metric_totals.last_seen, EXCLUDED.last_seen);
+        `)
+
+        await client.query(`
+            WITH combined AS (
+                SELECT domain, hits, date_trunc('hour', last_seen) AS bucket
+                FROM request_logs_all
+                WHERE last_seen >= NOW() - INTERVAL '8 days'
+                UNION ALL
+                SELECT domain, hits, date_trunc('hour', last_seen) AS bucket
+                FROM request_logs
+                WHERE last_seen >= NOW() - INTERVAL '8 days'
+            )
+            INSERT INTO request_metric_recent_hourly (metric_type, metric_value, bucket, hits)
+            SELECT
+                'domain'::text AS metric_type,
+                domain AS metric_value,
+                bucket,
+                SUM(hits)::bigint AS hits
+            FROM combined
+            GROUP BY domain, bucket
+            ON CONFLICT (metric_type, metric_value, bucket)
+            DO UPDATE SET hits = EXCLUDED.hits;
+        `)
+
+        await client.query(`
+            WITH live AS (
+                SELECT
+                    domain,
+                    to_timestamp(FLOOR(EXTRACT(EPOCH FROM last_seen) / 5) * 5) AS bucket,
+                    SUM(hits)::bigint AS hits
+                FROM request_logs
+                WHERE last_seen >= NOW() - INTERVAL '2 days'
+                GROUP BY domain, bucket
+            )
+            INSERT INTO request_metric_live_tps (domain, bucket, hits)
+            SELECT domain, bucket, hits
+            FROM live
+            ON CONFLICT (domain, bucket)
+            DO UPDATE SET hits = EXCLUDED.hits;
+        `)
+
+        await client.query(`
             DELETE FROM request_metric_recent_hourly
             WHERE bucket < date_trunc('hour', NOW()) - INTERVAL '8 days';
+        `)
+
+        await client.query(`
+            DELETE FROM request_metric_live_tps
+            WHERE bucket < NOW() - INTERVAL '2 days';
         `)
     })
 }

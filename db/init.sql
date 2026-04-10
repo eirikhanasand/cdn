@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS request_logs_all (
 );
 
 CREATE TABLE IF NOT EXISTS request_metric_totals (
-    metric_type TEXT NOT NULL CHECK (metric_type IN ('path', 'ip', 'user_agent')),
+    metric_type TEXT NOT NULL CHECK (metric_type IN ('path', 'ip', 'user_agent', 'domain')),
     metric_value TEXT NOT NULL,
     hits_total BIGINT NOT NULL DEFAULT 0,
     last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -135,11 +135,18 @@ CREATE TABLE IF NOT EXISTS request_metric_totals (
 );
 
 CREATE TABLE IF NOT EXISTS request_metric_recent_hourly (
-    metric_type TEXT NOT NULL CHECK (metric_type IN ('path', 'ip', 'user_agent')),
+    metric_type TEXT NOT NULL CHECK (metric_type IN ('path', 'ip', 'user_agent', 'domain')),
     metric_value TEXT NOT NULL,
     bucket TIMESTAMPTZ NOT NULL,
     hits BIGINT NOT NULL DEFAULT 0,
     PRIMARY KEY (metric_type, metric_value, bucket)
+);
+
+CREATE TABLE IF NOT EXISTS request_metric_live_tps (
+    domain TEXT NOT NULL,
+    bucket TIMESTAMPTZ NOT NULL,
+    hits BIGINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (domain, bucket)
 );
 
 CREATE TABLE IF NOT EXISTS request_metric_relations (
@@ -184,3 +191,4 @@ CREATE INDEX IF NOT EXISTS idx_project_group_members_share ON project_group_memb
 CREATE INDEX IF NOT EXISTS idx_request_metric_totals_lookup ON request_metric_totals(metric_type, hits_total DESC, metric_value);
 CREATE INDEX IF NOT EXISTS idx_request_metric_recent_hourly_lookup ON request_metric_recent_hourly(metric_type, bucket DESC, metric_value);
 CREATE INDEX IF NOT EXISTS idx_request_metric_relations_lookup ON request_metric_relations(primary_type, primary_value, relation_type, hits_total DESC, relation_value);
+CREATE INDEX IF NOT EXISTS idx_request_metric_live_tps_bucket ON request_metric_live_tps(bucket DESC);

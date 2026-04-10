@@ -6,11 +6,11 @@ export default async function tps() {
             SELECT
                 domain,
                 SUM(hits) AS hits,
-                SUM(hits) /30 AS tps
-            FROM request_logs
-            WHERE last_seen >= NOW() - INTERVAL '30 seconds'
+                SUM(hits)::float / 30 AS tps
+            FROM request_metric_live_tps
+            WHERE bucket >= NOW() - INTERVAL '30 seconds'
             GROUP BY domain
-            ORDER BY domain
+            ORDER BY tps DESC, hits DESC, domain ASC
         `
 
         const result = await run(query)

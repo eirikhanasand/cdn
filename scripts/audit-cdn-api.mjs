@@ -1,23 +1,32 @@
 import pg from 'pg'
+import crypto from 'crypto'
 
 const cdnBase = process.env.CDN_BASE || 'http://127.0.0.1:8501/api'
 const apiBase = process.env.API_BASE || 'http://127.0.0.1:8080/api'
 const runId = `cdn_audit_${Date.now()}`
-const password = 'Aa11!!Aa11!!Bb22'
-const vmToken = process.env.VM_API_TOKEN || ''
+const password = process.env.CDN_AUDIT_PASSWORD || `Cd33!!${crypto.randomUUID().replaceAll('-', '').slice(0, 18)}Aa`
+const vmToken = process.env.CDN_VM_API_TOKEN || process.env.VM_API_TOKEN || ''
+const cdnDbPassword = process.env.CDN_DB_PASSWORD
+const apiDbPassword = process.env.API_DB_PASSWORD
+
+if (!cdnDbPassword || !apiDbPassword) {
+    console.error('CDN_DB_PASSWORD and API_DB_PASSWORD are required.')
+    process.exit(1)
+}
+
 const cdnPool = new pg.Pool({
     host: process.env.CDN_DB_HOST || '127.0.0.1',
     port: Number(process.env.CDN_DB_PORT || 8502),
     database: process.env.CDN_DB || 'cdn',
     user: process.env.CDN_DB_USER || 'cdn',
-    password: process.env.CDN_DB_PASSWORD || 'nwvorwvniiwpnvnasnpnåqwovqw',
+    password: cdnDbPassword,
 })
 const apiPool = new pg.Pool({
     host: process.env.API_DB_HOST || '127.0.0.1',
     port: Number(process.env.API_DB_PORT || 8503),
     database: process.env.API_DB || 'hanasand',
     user: process.env.API_DB_USER || 'hanasand',
-    password: process.env.API_DB_PASSWORD || 'ultrastronghphanasandpassword',
+    password: apiDbPassword,
 })
 const results = []
 let token = ''
@@ -87,6 +96,30 @@ async function request(label, path, {
     return { body: parsed, res }
 }
 
+async function waitFor(label, fn, { timeoutMs = 12000, intervalMs = 750 } = {}) {
+    const started = Date.now()
+    let lastError = null
+
+    while (Date.now() - started < timeoutMs) {
+        try {
+            const value = await fn()
+            if (value) {
+                return value
+            }
+        } catch (error) {
+            lastError = error
+        }
+
+        await new Promise(resolve => setTimeout(resolve, intervalMs))
+    }
+
+    if (lastError) {
+        throw lastError
+    }
+
+    throw new Error(`${label} timed out after ${timeoutMs}ms`)
+}
+
 async function cleanup() {
     await cdnPool.query('DELETE FROM project_group_members WHERE group_id LIKE $1', [`${runId}%`]).catch(() => {})
     await cdnPool.query('DELETE FROM project_groups WHERE owner = $1 OR id LIKE $2', [runId, `${runId}%`]).catch(() => {})
@@ -96,19 +129,25 @@ async function cleanup() {
     await cdnPool.query('DELETE FROM blocklist WHERE owner = $1 OR value LIKE $2', [runId, `198.51.100.%`]).catch(() => {})
     await cdnPool.query('DELETE FROM request_logs WHERE domain = $1', [`${runId}.example`]).catch(() => {})
     await cdnPool.query('DELETE FROM request_logs_all WHERE domain = $1', [`${runId}.example`]).catch(() => {})
+    await cdnPool.query('DELETE FROM request_metric_live_tps WHERE domain = $1', [`${runId}.example`]).catch(() => {})
+    await cdnPool.query('DELETE FROM request_metric_recent_hourly WHERE metric_type = $1 AND metric_value = $2', ['domain', `${runId}.example`]).catch(() => {})
+    await cdnPool.query('DELETE FROM request_metric_totals WHERE metric_type = $1 AND metric_value = $2', ['domain', `${runId}.example`]).catch(() => {})
     await apiPool.query('DELETE FROM user_roles WHERE user_id = $1', [runId]).catch(() => {})
     await apiPool.query('DELETE FROM tokens WHERE id = $1', [runId]).catch(() => {})
     await apiPool.query('DELETE FROM users WHERE id = $1', [runId]).catch(() => {})
 }
 
 async function setupUser() {
-    await request('Hanasand POST /user', '/user', {
+    const signup = await request('Hanasand POST /user', '/user', {
         base: apiBase,
         method: 'POST',
         body: { id: runId, name: 'CDN Audit', password },
         expectStatus: 201,
         expect: body => expectObject(body) && Boolean(body.token),
     })
+    if (!signup.body?.token) {
+        throw new Error(`Unable to create audit user: ${JSON.stringify(signup.body)}`)
+    }
     await apiPool.query(`
         INSERT INTO user_roles (user_id, role_id, assigned_by)
         SELECT $1, role_id, 'administrator'
@@ -121,6 +160,9 @@ async function setupUser() {
         body: { password },
         expect: body => expectObject(body) && Boolean(body.token),
     })
+    if (!login.body?.token) {
+        throw new Error(`Unable to log in audit user: ${JSON.stringify(login.body)}`)
+    }
     token = login.body.token
 }
 
@@ -226,7 +268,14 @@ async function main() {
         expect: expectObject,
     })
     await request('GET /traffic/summary', '/traffic/summary', { expect: body => expectObject(body) || expectArray(body) })
-    await request('GET /traffic/tps', '/traffic/tps', { expect: expectArray })
+    await waitFor('traffic tps to include audit domain', async () => {
+        const result = await request('GET /traffic/tps?fresh=1', '/traffic/tps?fresh=1', {
+            expect: body => expectArray(body) && body.some(entry => entry.name === `${runId}.example` && Number(entry.tps) > 0),
+        })
+        return Array.isArray(result.body) && result.body.some(entry => entry.name === `${runId}.example` && Number(entry.tps) > 0)
+            ? result.body
+            : null
+    })
     await request('GET /traffic/ips', '/traffic/ips', { headers: authHeaders(), expect: expectArray })
     await request('GET /traffic/uas', '/traffic/uas', { headers: authHeaders(), expect: expectArray })
     await request('GET /traffic/recent', '/traffic/recent', { headers: authHeaders(), expect: expectArray })

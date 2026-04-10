@@ -18,6 +18,10 @@ sub vcl_recv {
         return (pass);
     }
 
+    if (req.url ~ "^/api/traffic/tps") {
+        return (pass);
+    }
+
     if (req.http.Authorization) {
         set req.http.X-Auth-Hash = req.http.Authorization;
     }
@@ -62,11 +66,6 @@ sub vcl_backend_response {
     set beresp.http.Cache-Control = "hanasand-cache, max-age=3600";
 
     if (bereq.http.X-Auth-Hash && bereq.http.X-User-ID) {
-        set beresp.ttl = 1m;
-        set beresp.http.Cache-Control = "hanasand-cache, max-age=60";
-    }
-
-    if (bereq.url ~ "^/api/traffic/tps") {
         set beresp.ttl = 1m;
         set beresp.http.Cache-Control = "hanasand-cache, max-age=60";
     }

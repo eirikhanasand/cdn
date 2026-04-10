@@ -56,7 +56,7 @@ export default async function postRequest(req: FastifyRequest, res: FastifyReply
         const result = await run(query, params)
 
         try {
-            await updateRollups({ ip, user_agent, path: logPath })
+            await updateRollups({ domain, ip, user_agent, path: logPath })
         } catch (error) {
             console.error(`Rollup update skipped: ${error}`)
         }
@@ -68,7 +68,7 @@ export default async function postRequest(req: FastifyRequest, res: FastifyReply
     }
 }
 
-async function updateRollups({ ip, user_agent, path }: { ip: string, user_agent: string, path: string }) {
+async function updateRollups({ domain, ip, user_agent, path }: { domain: string, ip: string, user_agent: string, path: string }) {
     await withClient(async (client) => {
         await client.query('BEGIN')
 
@@ -78,6 +78,7 @@ async function updateRollups({ ip, user_agent, path }: { ip: string, user_agent:
             const bucketISO = bucket.toISOString()
 
             const totals = [
+                ['domain', domain],
                 ['path', path],
                 ['ip', ip],
                 ['user_agent', user_agent],
@@ -100,6 +101,14 @@ async function updateRollups({ ip, user_agent, path }: { ip: string, user_agent:
                     DO UPDATE SET hits = request_metric_recent_hourly.hits + 1
                 `, [metricType, metricValue, bucketISO])
             }
+
+            const liveBucket = new Date(Math.floor(Date.now() / 5000) * 5000).toISOString()
+            await client.query(`
+                INSERT INTO request_metric_live_tps (domain, bucket, hits)
+                VALUES ($1, $2, 1)
+                ON CONFLICT (domain, bucket)
+                DO UPDATE SET hits = request_metric_live_tps.hits + 1
+            `, [domain, liveBucket])
 
             const relations = [
                 ['ip', ip, 'path', path],
