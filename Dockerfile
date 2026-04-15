@@ -1,5 +1,5 @@
 # Uses latest node alpine image for apk package manager
-FROM node:alpine
+FROM oven/bun:alpine
 
 # Install dependencies
 RUN apk add --no-cache varnish
@@ -11,13 +11,13 @@ WORKDIR /usr/src/app
 COPY . .
 COPY ./entrypoint.sh /usr/src/app/entrypoint.sh
 COPY ./default.vcl /etc/varnish/default.vcl
-COPY package.json package-lock.json ./
+COPY package.json bun.lock ./
 
 # Adds execute permissions to entrypoint script
 RUN chmod +x /usr/src/app/entrypoint.sh
 
 # Installs required dependencies
-RUN npm install
+RUN bun install
 
 # Expose API port
 EXPOSE 8080
