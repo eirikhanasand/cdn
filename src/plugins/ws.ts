@@ -1,12 +1,11 @@
 import fp from 'fastify-plugin'
 import type { FastifyInstance, FastifyRequest } from 'fastify'
+import run from '#db'
 import registerClient from '#utils/ws/registerClient.ts'
 import removeClient from '#utils/ws/removeClient.ts'
 import handleShareMessage from '#utils/ws/handleShareMessage.ts'
 import handleTerminalMessage from '#utils/ws/handleTerminalMessage.ts'
-import followShell from '#utils/ws/followShell.ts'
-// import run from '#db'
-// import loadSQL from '#utils/loadSQL.ts'
+import followShell, { shellClients } from '#utils/ws/followShell.ts'
 
 export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
     fastify.register(async function (fastify) {
@@ -29,35 +28,40 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
 
         fastify.get('/api/ws/share/:name/shell/:user/:id', { websocket: true }, async (connection, req: FastifyRequest) => {
             try {
-                const { id, name, user } = (req.params as { id: string, name: string, user: string })
-                registerClient(id, connection)
-                // const query = await loadSQL('getAncestor.sql')
-                // const ancestorResult = await run(query, [id])
-                // const ancestorId = ancestorResult.rows[0]?.id
+                const { name, user } = (req.params as { id: string, name: string, user: string })
+                const roomId = name
 
-                // stores the last output from the vm
-                // const result = await run('SELECT * FROM vms WHERE project_id = $1', [ancestorId])
-                // const vm: VM = result.rows[0]
-                // if (!vm) {
-                //     const createVM = await
-                //     const result = await run('INSERT INTO vms (project_id, vm_id, last_log) VALUES ($1, $2, \'{}\');')
-                // } else {
-                //     followShell(name, 'bash', connection)
-                // }
+                registerClient(roomId, connection, shellClients)
 
-                followShell(connection, id, name, user)
+                const previousLog = await run(
+                    'SELECT last_log FROM vms WHERE project_id = $1',
+                    [roomId]
+                )
+                const previousLines = previousLog.rows[0]?.last_log as string[] | undefined
+                if (Array.isArray(previousLines)) {
+                    previousLines.forEach((content) => {
+                        connection.send(JSON.stringify({
+                            type: 'update',
+                            content,
+                            timestamp: new Date().toISOString(),
+                            participants: shellClients.get(roomId)?.size || 1
+                        }))
+                    })
+                }
+
+                followShell(connection, roomId, name, user)
 
                 connection.on('message', (message) => {
-                    handleTerminalMessage(id, connection, message)
+                    handleTerminalMessage(roomId, connection, message)
                 })
 
                 connection.on('error', (error) => {
-                    removeClient(id, connection)
+                    removeClient(roomId, connection, shellClients)
                     console.log(error)
                 })
 
                 connection.on('close', () => {
-                    removeClient(id, connection)
+                    removeClient(roomId, connection, shellClients)
                 })
             } catch (error) {
                 connection.send(Buffer.from(JSON.stringify(error)))

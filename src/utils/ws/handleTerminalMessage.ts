@@ -1,8 +1,8 @@
 import run from '#db'
 import type { RawData } from 'ws'
 import { WebSocket as WS } from 'ws'
+import { shellClients } from './followShell.ts'
 
-export const shareClients = new Map<string, Set<WS>>()
 export const pendingUpdates = new Map<string, { content: string; timer: NodeJS.Timeout }>()
 
 export default async function handleTerminalMessage(
@@ -24,7 +24,7 @@ export default async function handleTerminalMessage(
 }
 
 function broadcastUpdate(id: string, sender: WS, content: string) {
-    const clients = shareClients.get(id)
+    const clients = shellClients.get(id)
     if (!clients) {
         return
     }
@@ -55,8 +55,13 @@ function queueSave(id: string, content: string) {
         if (!entry) return
         try {
             await run(
-                'UPDATE vms SET last_log = last_log || $1, last_used = NOW() WHERE project_id = $2',
-                [[entry.content], id]
+                `INSERT INTO vms (project_id, vm_id, last_log, last_used)
+                 VALUES ($1, $1, $2, NOW())
+                 ON CONFLICT (project_id)
+                 DO UPDATE SET
+                    last_log = COALESCE(vms.last_log, '{}'::text[]) || EXCLUDED.last_log,
+                    last_used = NOW()`,
+                [id, [entry.content]]
             )
 
             console.log(`Saved vm ${id} to DB`)

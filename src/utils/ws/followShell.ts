@@ -1,22 +1,20 @@
 import { WebSocket } from 'ws'
 import config from '#constants'
-import removeClient from './removeClient.ts'
-import registerClient from './registerClient.ts'
 import updateVM from '../vm/getVMInternals.ts'
 
 export const shellClients = new Map<string, Set<WebSocket>>()
-const messageBuffer: Buffer[] = []
 
-export default function followShell(connection: WebSocket, id: string, name: string, user: string) {
+export default function followShell(connection: WebSocket, roomId: string, name: string, user: string) {
+    const messageBuffer: Buffer[] = []
+
     try {
-        const internalWs = new WebSocket(`${config.internal_wss}/${name}/shell/${user}/${id}`, {
+        const internalWs = new WebSocket(`${config.internal_wss}/${name}/shell/${user}/${roomId}`, {
             headers: {
                 'User-Agent': 'hanasand_internal'
             }
         })
 
         updateVM(name)
-        registerClient(id, connection, shellClients)
 
         internalWs.on('message', (msg) => {
             connection.send(msg)
@@ -31,12 +29,12 @@ export default function followShell(connection: WebSocket, id: string, name: str
             try {
                 connection.close()
             } catch (error) {
-                console.log(`Error occured while closing connection for id ${id}: ${error}`)
+                console.log(`Error occured while closing connection for ${roomId}: ${error}`)
             }
         })
 
         internalWs.on('error', (error) => {
-            console.error(`internalWs connection failed for ${id}:`, error.message)
+            console.error(`internalWs connection failed for ${roomId}:`, error.message)
             if (connection.readyState === WebSocket.OPEN) {
                 try {
                     connection.send(JSON.stringify({ type: 'error', message: 'Internal shell connection failed', detail: error.message }))
@@ -61,7 +59,6 @@ export default function followShell(connection: WebSocket, id: string, name: str
         })
 
         connection.on('close', () => {
-            removeClient(id, connection, shellClients)
             internalWs.close()
         })
 
