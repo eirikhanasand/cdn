@@ -1,6 +1,7 @@
 import { WebSocket } from 'ws'
 import config from '#constants'
 import updateVM from '../vm/getVMInternals.ts'
+import saveTerminalLog from './saveTerminalLog.ts'
 
 export const shellClients = new Map<string, Set<WebSocket>>()
 
@@ -17,6 +18,15 @@ export default function followShell(connection: WebSocket, roomId: string, name:
         updateVM(name)
 
         internalWs.on('message', (msg) => {
+            try {
+                const parsed = JSON.parse(msg.toString()) as { type?: string; content?: string }
+                if (parsed.type === 'update' && typeof parsed.content === 'string') {
+                    saveTerminalLog(roomId, parsed.content)
+                }
+            } catch (error) {
+                console.error(`Failed to parse terminal output for ${roomId}: ${error}`)
+            }
+
             connection.send(msg)
         })
 
