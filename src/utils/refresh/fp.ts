@@ -42,6 +42,7 @@ export default fp(async (fastify) => {
                     path: Buffer.from(JSON.stringify(newSummary.data.path || [])),
                     ip: Buffer.from(JSON.stringify(newSummary.data.ip || [])),
                     user_agent: Buffer.from(JSON.stringify(newSummary.data.ua || [])),
+                    domain: Buffer.from(JSON.stringify(newSummary.data.domain || [])),
                 }
             }
 

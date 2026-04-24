@@ -49,6 +49,7 @@ fastify.decorate('cachedSummary', {
         path: Buffer.from(JSON.stringify([])),
         ip: Buffer.from(JSON.stringify([])),
         user_agent: Buffer.from(JSON.stringify([])),
+        domain: Buffer.from(JSON.stringify([])),
     }
 })
 

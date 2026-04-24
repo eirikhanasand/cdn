@@ -1,9 +1,9 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function getRequestMetrics(this: FastifyInstance, req: FastifyRequest, res: FastifyReply) {
-    const { metric = 'path' } = req.query as { metric?: 'path' | 'ip' | 'user_agent' }
+    const { metric = 'path' } = req.query as { metric?: 'path' | 'ip' | 'user_agent' | 'domain' }
 
-    if (!['path', 'ip', 'user_agent'].includes(metric)) {
+    if (!['path', 'ip', 'user_agent', 'domain'].includes(metric)) {
         return res.status(400).send({ error: 'Invalid metric type' })
     }
 

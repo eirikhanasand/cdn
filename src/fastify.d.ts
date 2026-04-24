@@ -12,7 +12,8 @@ declare module 'fastify' {
             data: {
                 path: Buffer,
                 ip: Buffer,
-                user_agent: Buffer
+                user_agent: Buffer,
+                domain: Buffer
             }
         }
     }
