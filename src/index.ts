@@ -2,17 +2,14 @@ import cors from '@fastify/cors'
 import Fastify from 'fastify'
 import routes from './routes.ts'
 import getIndex from './handlers/index/get.ts'
+import getRobotsTxt from './handlers/index/getRobotsTxt.ts'
 import websocketPlugin from '@fastify/websocket'
 import fastifyMultipart from '@fastify/multipart'
 import ws from './plugins/ws.ts'
 import fp from '#utils/refresh/fp.ts'
 import ensureSchema from '#utils/schema.ts'
-import path from 'path'
-import fs from 'fs'
-import { fileURLToPath } from 'url'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import registerPublicReadRateLimiter from '#utils/rateLimit/publicReadLimiter.ts'
+import loadInstallScript from './install/loadInstallScript.ts'
 
 const fastify = Fastify({
     logger: true
@@ -31,15 +28,7 @@ fastify.register(cors, {
 
 const port = Number(process.env.PORT) || 8081
 
-fastify.decorate('install', (() => {
-    const filePath = path.join(__dirname, 'static', 'install.sh')
-    try {
-        return Buffer.from(fs.readFileSync(filePath))
-    } catch (error) {
-        console.error('Failed to read install.sh:', error)
-        return Buffer.from('')
-    }
-})())
+fastify.decorate('install', loadInstallScript())
 
 fastify.decorate('cachedIPMetrics', { status: 200, data: Buffer.from(JSON.stringify([])) })
 fastify.decorate('cachedUAMetrics', { status: 200, data: Buffer.from(JSON.stringify([])) })
@@ -54,53 +43,18 @@ fastify.decorate('cachedSummary', {
 })
 
 fastify.register(websocketPlugin)
+registerPublicReadRateLimiter(fastify)
 fastify.register(ws, { prefix: '/api' })
 fastify.register(routes, { prefix: '/api' })
 
 fastify.get('/', getIndex)
-fastify.get('/robots.txt', async (_, res) => {
-    const disallowedPaths = [
-        '/files',
-        '/share',
-        '/link',
-        '/words',
-        '/traffic',
-        '/blocklist',
-        '/files/*',
-        '/share/*',
-        '/link/*',
-        '/words/*',
-        '/traffic/*',
-        '/blocklist/*',
-        '/api/files',
-        '/api/share',
-        '/api/link',
-        '/api/words',
-        '/api/traffic',
-        '/api/blocklist',
-        '/api/files/*',
-        '/api/share/*',
-        '/api/link/*',
-        '/api/words/*',
-        '/api/blocklist/*',
-        '/api/traffic/*',
-    ]
-    let content = 'User-agent: *\n'
-    disallowedPaths.forEach(path => {
-        content += `Disallow: ${path}\n`
-    })
-    res.type('text/plain').send(content)
-})
+fastify.get('/robots.txt', getRobotsTxt)
 
-async function start() {
-    try {
-        await ensureSchema()
-        fastify.register(fp)
-        await fastify.listen({ port, host: '0.0.0.0' })
-    } catch (error) {
-        fastify.log.error(error)
-        process.exit(1)
-    }
+try {
+    await ensureSchema()
+    fastify.register(fp)
+    await fastify.listen({ port, host: '0.0.0.0' })
+} catch (error) {
+    fastify.log.error(error)
+    process.exit(1)
 }
-
-start()

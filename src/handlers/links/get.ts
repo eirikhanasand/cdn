@@ -1,5 +1,5 @@
-import run from '#db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import queryLinks from './queryLinks.ts'
 
 export default async function getLink(req: FastifyRequest, res: FastifyReply) {
     try {
@@ -24,20 +24,4 @@ export default async function getLink(req: FastifyRequest, res: FastifyReply) {
         console.log(`Error fetching link: ${error}`)
         return res.status(500).send({ error: 'Failed to fetch link' })
     }
-}
-
-async function queryLinks(id: string) {
-    const updateQuery = `
-        UPDATE links
-        SET visits = visits + 1
-        WHERE id = $1
-        RETURNING *;
-    `
-    const updateResult = await run(updateQuery, [id])
-
-    if (updateResult?.rowCount && updateResult.rowCount > 0) {
-        return updateResult.rows[0]
-    }
-
-    return null
 }

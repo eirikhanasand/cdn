@@ -14,7 +14,9 @@ type Permissions = {
     editors: string[]
 }
 
-export default async function filePermissionsWrapper({ userId, fileId }: PermissionsProps): Promise<{ status: boolean, permissions: string[] | null }> {
+export default async function filePermissionsWrapper(
+    { userId, fileId }: PermissionsProps,
+): Promise<{ status: boolean, permissions: string[] | null }> {
     const query = await loadSQL('checkFilePermissions.sql')
     const result = await run(query, [userId, fileId])
     const data = result.rows[0] as Permissions

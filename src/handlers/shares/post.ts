@@ -80,7 +80,7 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
             return res.status(201).send({ ...result.rows[0], tree: treeResult.rows, permissions })
         }
 
-        const tree = buildTree(treeResult.rows)
+        const tree = buildTree(treeResult.rows as FileItem[])
         return res.status(201).send({ ...result.rows[0], tree, permissions })
     } catch (error) {
         console.log(`Error creating share: ${error}`)

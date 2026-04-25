@@ -14,6 +14,7 @@ services:
       .env
     environment:
       API_URL: ${API_URL:-https://api.hanasand.com/api}
+      DB_HOST: postgres
       INTERNAL_API: ${INTERNAL_API:-https://internal.hanasand.com/api}
       INTERNAL_WSS: ${INTERNAL_WSS:-wss://internal.hanasand.com/api/ws}
     ports:
@@ -22,6 +23,7 @@ services:
   postgres:
     container_name: cdn_database
     image: postgres:15
+    command: ["postgres", "-c", "shared_preload_libraries="]
     mem_limit: 1g
     cpus: "2.0"
     restart: always

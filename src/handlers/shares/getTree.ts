@@ -43,7 +43,7 @@ export default async function getTree(req: FastifyRequest, res: FastifyReply) {
             return res.send(result.rows)
         }
 
-        const tree = buildTree(result.rows)
+        const tree = buildTree(result.rows as FileItem[])
         return res.send(tree)
     } catch (error) {
         console.log('Failed to get tree:', error)

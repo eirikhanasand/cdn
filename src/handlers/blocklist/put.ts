@@ -37,10 +37,13 @@ export default async function putBlockList(req: FastifyRequest, res: FastifyRepl
         }
 
         const setClauses: string[] = []
-        const params: any[] = []
+        const params: SQLParamType = []
 
         Object.entries(updates).forEach(([key, val]) => {
-            params.push(val)
+            const normalizedValue = key === 'hits'
+                ? JSON.stringify(val)
+                : (val as string | number | boolean | string[] | Date | Buffer | null)
+            params.push(normalizedValue)
             setClauses.push(`${key} = $${params.length}`)
         })
 

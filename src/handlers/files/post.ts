@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { randomUUID } from 'crypto'
 import run from '#db'
+import streamToBuffer from './streamToBuffer.ts'
 
 type MultipartValue<T = unknown> = MultipartFile | MultipartField<T>
 
@@ -79,13 +80,4 @@ export default async function postFile(req: FastifyRequest, res: FastifyReply) {
         console.error(error)
         return res.status(500).send({ error: 'Internal server error' })
     }
-}
-
-function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-        const chunks: Uint8Array[] = []
-        stream.on('data', (chunk) => chunks.push(chunk))
-        stream.on('end', () => resolve(Buffer.concat(chunks)))
-        stream.on('error', reject)
-    })
 }

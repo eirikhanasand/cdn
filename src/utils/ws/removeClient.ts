@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws'
-import { shareClients } from './handleShareMessage.ts'
+import { shareClients } from './shareState.ts'
 
 export default function removeClient(id: string, socket: WebSocket, customClients?: Map<string, Set<WebSocket>>) {
     const clients = (customClients || shareClients).get(id)

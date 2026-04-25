@@ -1,0 +1,26 @@
+import type { ClientClass, LimitProfile } from './types.ts'
+
+export const REQUEST_WINDOW_MS = 60_000
+export const MISS_WINDOW_MS = 60_000
+export const CLEANUP_INTERVAL_MS = 5 * 60_000
+
+export const TARGET_ROUTE_GROUPS = [
+    '/api/share/',
+    '/api/files/path/',
+    '/api/files/check',
+]
+
+export const LIMITS: Record<ClientClass, LimitProfile> = {
+    first_party_browser: {
+        requestsPerMinute: 600,
+        missesPerMinute: 180,
+    },
+    trusted_api: {
+        requestsPerMinute: 240,
+        missesPerMinute: 60,
+    },
+    external: {
+        requestsPerMinute: 24,
+        missesPerMinute: 8,
+    },
+}
