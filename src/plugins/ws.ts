@@ -1,6 +1,5 @@
 import fp from 'fastify-plugin'
 import type { FastifyInstance, FastifyRequest } from 'fastify'
-import run from '#db'
 import registerClient from '#utils/ws/registerClient.ts'
 import removeClient from '#utils/ws/removeClient.ts'
 import handleShareMessage from '#utils/ws/handleShareMessage.ts'
@@ -32,22 +31,6 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
                 const roomId = name
 
                 registerClient(roomId, connection, shellClients)
-
-                const previousLog = await run(
-                    'SELECT last_log FROM vms WHERE project_id = $1',
-                    [roomId]
-                )
-                const previousLines = previousLog.rows[0]?.last_log as string[] | undefined
-                if (Array.isArray(previousLines)) {
-                    previousLines.forEach((content) => {
-                        connection.send(JSON.stringify({
-                            type: 'update',
-                            content,
-                            timestamp: new Date().toISOString(),
-                            participants: shellClients.get(roomId)?.size || 1
-                        }))
-                    })
-                }
 
                 followShell(connection, roomId, name, user)
 
