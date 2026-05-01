@@ -14,6 +14,8 @@ export default async function getUserFiles(
     req: FastifyRequest<{ Params: UserFilesParams, Querystring: UserFilesQuery }>,
     res: FastifyReply,
 ) {
+    res.header('Cache-Control', 'no-store')
+
     const { id } = req.params
     const user = req.headers.id
     const tokenHeader = req.headers.authorization || ''
