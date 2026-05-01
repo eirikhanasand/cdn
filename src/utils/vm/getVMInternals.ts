@@ -2,9 +2,15 @@ import config from '#constants'
 
 export default async function getVMInternals(name: string) {
     try {
+        const authHeader = buildBearerHeader(config.vm_token)
+        if (!authHeader) {
+            console.warn('Skipping VM metadata refresh because VM_TOKEN is not safe for an HTTP header.')
+            return null
+        }
+
         const response = await fetch(`${config.internal_api}/vm/${name}`, {
             headers: {
-                'Authorization': `Bearer ${config.vm_token}`
+                'Authorization': authHeader
             }
         })
 
@@ -18,4 +24,13 @@ export default async function getVMInternals(name: string) {
         console.log(error)
         return null
     }
+}
+
+function buildBearerHeader(token: string | undefined) {
+    if (!token) {
+        return null
+    }
+
+    const value = `Bearer ${token}`
+    return /^[\x20-\x7E]+$/.test(value) ? value : null
 }
