@@ -18,6 +18,10 @@ sub vcl_recv {
         return (pass);
     }
 
+    if (req.url ~ "^/api/files/user/") {
+        return (pass);
+    }
+
     if (req.url ~ "^/api/traffic/tps") {
         return (pass);
     }
@@ -62,6 +66,11 @@ sub vcl_hash {
 }
 
 sub vcl_backend_response {
+    if (beresp.http.Cache-Control ~ "(?i)no-store") {
+        set beresp.uncacheable = true;
+        return (deliver);
+    }
+
     set beresp.ttl = 1h;
     set beresp.http.Cache-Control = "hanasand-cache, max-age=3600";
 
