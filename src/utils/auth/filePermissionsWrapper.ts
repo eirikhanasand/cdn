@@ -21,6 +21,14 @@ export default async function filePermissionsWrapper(
     const result = await run(query, [userId, fileId])
     const data = result.rows[0] as Permissions
 
+    if (!data) {
+        return { status: false, permissions: null }
+    }
+
+    if (!data.owner) {
+        return { status: true, permissions: ['ownerless'] }
+    }
+
     if (data.owner !== userId && !data.editors.includes(userId)) {
         return { status: false, permissions: null }
     }

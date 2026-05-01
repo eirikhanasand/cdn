@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { randomUUID } from 'crypto'
 import run from '#db'
 import streamToBuffer from './streamToBuffer.ts'
+import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 
 type MultipartValue<T = unknown> = MultipartFile | MultipartField<T>
 
@@ -57,10 +58,11 @@ export default async function postFile(req: FastifyRequest, res: FastifyReply) {
 
         const id = randomUUID().slice(0, 6)
         const filePath = path || id
+        const owner = await authenticatedOwner(req)
 
         const result = await run(
-            `INSERT INTO files (id, name, description, data, path, type)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            `INSERT INTO files (id, name, description, data, path, type, owner)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             ON CONFLICT (path) DO UPDATE
             SET path = EXCLUDED.path
             RETURNING 
@@ -68,16 +70,30 @@ export default async function postFile(req: FastifyRequest, res: FastifyReply) {
                 WHEN xmax = 0 THEN 'ok'
                 ELSE 'conflict'
               END AS status;`,
-            [id, name, description || null, fileBuffer, filePath, type]
+            [id, name, description || null, fileBuffer, filePath, type, owner]
         )
 
         if (result.rows[0].status === 'conflict') {
             return res.status(409).send({ error: `Path '${filePath}' taken` })
         }
 
-        return res.send({ id })
+        return res.send({ id, owner })
     } catch (error) {
         console.error(error)
         return res.status(500).send({ error: 'Internal server error' })
     }
+}
+
+async function authenticatedOwner(req: FastifyRequest) {
+    const user = req.headers.id
+    const tokenHeader = req.headers.authorization || ''
+    const token = Array.isArray(tokenHeader) ? tokenHeader[0]?.split(' ')[1] : tokenHeader.split(' ')[1]
+    const userId = Array.isArray(user) ? user[0] : user
+
+    if (!userId || !token) {
+        return null
+    }
+
+    const auth = await tokenWrapper(userId, token)
+    return auth.status ? auth.id : null
 }

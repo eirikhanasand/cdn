@@ -52,6 +52,12 @@ export default async function ensureSchema() {
         `)
 
         await client.query(`
+            ALTER TABLE files
+            ADD COLUMN IF NOT EXISTS owner TEXT;
+
+            CREATE INDEX IF NOT EXISTS idx_files_owner_uploaded_at
+            ON files(owner, uploaded_at DESC);
+
             DROP INDEX IF EXISTS idx_request_logs_domain;
             DROP INDEX IF EXISTS idx_request_logs_last_seen;
 

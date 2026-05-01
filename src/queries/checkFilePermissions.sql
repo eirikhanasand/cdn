@@ -2,13 +2,14 @@ SELECT
     id,
     path,
     NULL::TEXT AS alias,
-    NULL::TEXT AS owner,
+    owner,
     '{}'::TEXT[] AS editors,
     FALSE AS locked,
     CASE
-        WHEN $1::TEXT IS NOT NULL THEN 'owner'
+        WHEN owner = $1::TEXT THEN 'owner'
+        WHEN owner IS NULL AND $1::TEXT IS NOT NULL THEN 'ownerless'
         ELSE 'none'
     END AS role,
-    TRUE AS can_edit
+    (owner = $1::TEXT OR owner IS NULL) AS can_edit
 FROM files
 WHERE id = $2;
