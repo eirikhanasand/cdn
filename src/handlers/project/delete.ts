@@ -26,7 +26,7 @@ export default async function deleteProject(req: FastifyRequest, res: FastifyRep
 
     try {
         const result = await queryAlias(alias)
-        if (!result || result.rows.length === 0) {
+        if (!result || result.rows.length <= 1) {
             return res.status(404).send({ error: `Project ${alias} not found` })
         }
 

@@ -43,10 +43,15 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
             const aliasResult = await run('SELECT type, alias FROM shares WHERE id = $1', [clientParent])
             alias = aliasResult.rows[0].alias
             parentType = aliasResult.rows[0].type
+
+            if (parentType === 'folder' && alias === clientParent) {
+                alias = await createProjectAlias()
+                await run('UPDATE shares SET alias = $1 WHERE alias = $2', [alias, clientParent])
+            }
         }
 
         if (!alias) {
-            alias = getWords()[0]
+            alias = id
         }
 
         const parent = parentType === 'file' ? null : clientParent || null
@@ -85,5 +90,15 @@ export default async function postShare(req: FastifyRequest, res: FastifyReply) 
     } catch (error) {
         console.log(`Error creating share: ${error}`)
         return res.status(500).send({ error: 'Failed to create share' })
+    }
+}
+
+async function createProjectAlias() {
+    while (true) {
+        const alias = getWords()[0]
+        const existing = await run('SELECT 1 FROM shares WHERE alias = $1 LIMIT 1', [alias])
+        if (!existing.rowCount) {
+            return alias
+        }
     }
 }
