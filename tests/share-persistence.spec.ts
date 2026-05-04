@@ -35,6 +35,85 @@ test('share websocket edits persist and can be loaded by another client', async 
         .toBe(content)
 })
 
+test('new share websocket clients receive pending edits before debounce save finishes', async ({ baseURL }) => {
+    const apiBase = baseURL || 'http://127.0.0.1:8501/api'
+    const shareId = `pw-pending-${Date.now().toString(36)}`
+    const content = `instant-${Date.now().toString(36)}`
+
+    const created = await fetch(`${apiBase}/share`, {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+            id: shareId,
+            content: '',
+            name: shareId,
+            path: shareId,
+            type: 'file',
+        }),
+    })
+
+    expect(created.ok).toBeTruthy()
+
+    const wsUrl = `${toWsApiBase(apiBase)}/ws/share/${shareId}`
+    const editor = await openSocket(wsUrl)
+    try {
+        editor.send(JSON.stringify({ type: 'edit', content }))
+
+        await expect.poll(
+            () => readPendingUpdate(wsUrl),
+            { timeout: 1000 },
+        ).toBe(content)
+    } finally {
+        editor.close()
+    }
+})
+
+function openSocket(url: string) {
+    return new Promise<WebSocket>((resolve, reject) => {
+        const ws = new WebSocket(url)
+        const timeout = setTimeout(() => {
+            ws.close()
+            reject(new Error(`Timed out opening websocket ${url}`))
+        }, 5000)
+
+        ws.on('open', () => {
+            clearTimeout(timeout)
+            resolve(ws)
+        })
+
+        ws.on('error', (error) => {
+            clearTimeout(timeout)
+            reject(error)
+        })
+    })
+}
+
+function readPendingUpdate(url: string) {
+    return new Promise<string>((resolve, reject) => {
+        const ws = new WebSocket(url)
+        const timeout = setTimeout(() => {
+            ws.close()
+            reject(new Error(`Timed out waiting for pending update against ${url}`))
+        }, 1000)
+
+        ws.on('message', (raw) => {
+            const message = JSON.parse(raw.toString()) as { type?: string, content?: string }
+            if (message.type === 'update') {
+                clearTimeout(timeout)
+                ws.close()
+                resolve(message.content || '')
+            }
+        })
+
+        ws.on('error', (error) => {
+            clearTimeout(timeout)
+            reject(error)
+        })
+    })
+}
+
 function sendWebSocketEdit(url: string, content: string) {
     return new Promise<void>((resolve, reject) => {
         const ws = new WebSocket(url)
