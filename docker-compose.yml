@@ -19,6 +19,9 @@ services:
       INTERNAL_WSS: ${INTERNAL_WSS:-wss://internal.hanasand.com/api/ws}
     ports:
       - "8501:8080"
+    networks:
+      - default
+      - hanasandnet
 
   postgres:
     container_name: cdn_database
@@ -57,6 +60,13 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: cdn
       DB_HOST: postgres
+    networks:
+      - default
 
 volumes:
   postgres_data:
+
+networks:
+  hanasandnet:
+    external: true
+    name: hanasand_hanasandnet
