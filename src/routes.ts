@@ -9,6 +9,7 @@ import getUserFiles from './handlers/files/getUserFiles.ts'
 import getShare from './handlers/shares/get.ts'
 import putShare from './handlers/shares/put.ts'
 import postShare from './handlers/shares/post.ts'
+import deleteShare from './handlers/shares/delete.ts'
 import checkPath from './handlers/files/checkPath.ts'
 import getLink from './handlers/links/get.ts'
 import putLink from './handlers/links/put.ts'
@@ -78,6 +79,7 @@ export default async function apiRoutes(fastify: FastifyInstance) {
     fastify.post('/share/request/:id', requestFromShareVm)
     fastify.put('/share/:id', putShare)
     fastify.post('/share', postShare)
+    fastify.delete('/share/:id', deleteShare)
 
     // project
     fastify.get('/project/:alias', getProject)

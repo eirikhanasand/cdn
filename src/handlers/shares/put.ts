@@ -24,8 +24,8 @@ export default async function putShare(req: FastifyRequest, res: FastifyReply) {
             return res.status(400).send({ error: 'Missing share ID' })
         }
 
-        if (!content) {
-            return res.status(400).send({ error: 'No content' })
+        if (path === undefined && content === undefined && name === undefined) {
+            return res.status(400).send({ error: 'No updates' })
         }
 
         const query = `
@@ -37,7 +37,12 @@ export default async function putShare(req: FastifyRequest, res: FastifyReply) {
             WHERE id = $1
             RETURNING *
         `
-        const result = await run(query, [id, path || null, content, name || null])
+        const result = await run(query, [
+            id,
+            path === undefined ? null : path,
+            content === undefined ? null : content,
+            name === undefined ? null : name
+        ])
 
         if (!result || result.rowCount === 0) {
             return res.status(404).send({ error: `Share ${id} not found` })
