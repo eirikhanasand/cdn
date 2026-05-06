@@ -46,6 +46,19 @@ export default async function requestFromShareVm(req: FastifyRequest, res: Fasti
             data = { error: text || 'Invalid response from VM request handler.' }
         }
 
+        if (!response.ok && isPlatformError(data)) {
+            const directResponse = await runDirectRequest({
+                ...payload,
+                headers: normalizedHeaders.headers,
+                warnings: [
+                    ...(Array.isArray(payload.warnings) ? payload.warnings : []),
+                    ...normalizedHeaders.warnings,
+                    'Share VM request failed; retried from CDN.',
+                ],
+            })
+            return res.status(directResponse.statusCode).send(directResponse.body)
+        }
+
         return res.status(response.status).send(mergeWarnings(data, normalizedHeaders.warnings))
     } catch (error) {
         return res.status(502).send({
@@ -105,5 +118,56 @@ function mergeWarnings(data: unknown, warnings: string[]) {
     return {
         ...payload,
         warnings: Array.from(new Set([...existing, ...warnings])),
+    }
+}
+
+function isPlatformError(data: unknown) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        return false
+    }
+
+    const error = (data as Record<string, unknown>).error
+    return typeof error === 'string'
+        && error.includes('Request Error')
+        && error.includes('Hanasand System Notice')
+}
+
+async function runDirectRequest(payload: RequestPayload) {
+    const method = String(payload.method || 'GET').toUpperCase()
+    const started = performance.now()
+    try {
+        const response = await fetch(String(payload.url || ''), {
+            method,
+            headers: payload.headers || {},
+            body: ['GET', 'HEAD'].includes(method) ? undefined : payload.body || '',
+        })
+        const body = await response.text()
+        return {
+            statusCode: response.status,
+            body: {
+                ok: response.ok,
+                status: response.status,
+                statusText: response.statusText,
+                elapsed_ms: Math.round(performance.now() - started),
+                headers: Object.fromEntries(response.headers.entries()),
+                body,
+                warnings: payload.warnings || [],
+                request: {
+                    method,
+                    url: payload.url,
+                    headers: payload.headers || {},
+                    body: payload.body || '',
+                },
+            },
+        }
+    } catch (error) {
+        return {
+            statusCode: 502,
+            body: {
+                error: error instanceof Error ? error.message : String(error),
+                elapsed_ms: Math.round(performance.now() - started),
+                warnings: payload.warnings || [],
+            },
+        }
     }
 }
