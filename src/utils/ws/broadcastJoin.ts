@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws'
-import { shareClients } from './shareState.ts'
+import { shareClients, sharePresence } from './shareState.ts'
 
 export default function broadcastJoin(id: string, customClients?: Map<string, Set<WebSocket>>) {
     const clients = (customClients || shareClients).get(id)
@@ -11,6 +11,9 @@ export default function broadcastJoin(id: string, customClients?: Map<string, Se
         type: 'join',
         timestamp: new Date().toISOString(),
         participants: clients.size,
+        users: [...clients]
+            .map(client => sharePresence.get(client))
+            .filter(Boolean),
     })
 
     for (const client of clients) {

@@ -12,6 +12,7 @@ export default function broadcastShareUpdate(id: string, sender: WS, content: st
         content,
         timestamp: new Date().toISOString(),
         participants: clients.size,
+        clientId: senderClientId(sender),
     })
 
     for (const client of clients) {
@@ -19,4 +20,8 @@ export default function broadcastShareUpdate(id: string, sender: WS, content: st
             client.send(payload)
         }
     }
+}
+
+function senderClientId(sender: WS) {
+    return (sender as WS & { clientId?: string }).clientId || null
 }
