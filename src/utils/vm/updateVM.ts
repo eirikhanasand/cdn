@@ -8,7 +8,7 @@ export default async function updateVM(name: string) {
             console.log(`DNS lookup for VM ${name} failed.`)
         }
 
-        const vm = { ...internals, name, owner: name, access_users: [], created_by: name }
+        const vm = { ...internals, name, owner: name, access_users: [], created_by: name, provision_local: false }
         const response = await fetch(`${config.api}/api/vm`, {
             method: 'POST',
             headers: {

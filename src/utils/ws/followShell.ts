@@ -5,11 +5,11 @@ import saveTerminalLog from './saveTerminalLog.ts'
 
 export const shellClients = new Map<string, Set<WebSocket>>()
 
-export default function followShell(connection: WebSocket, roomId: string, name: string, user: string) {
+export default function followShell(connection: WebSocket, roomId: string, name: string, user: string, sessionId: string = roomId) {
     const messageBuffer: Buffer[] = []
 
     try {
-        const internalWs = new WebSocket(`${config.internal_wss}/${name}/shell/${user}/${roomId}`, {
+        const internalWs = new WebSocket(`${config.internal_wss}/${name}/shell/${user}/${sessionId}`, {
             headers: {
                 'User-Agent': 'hanasand_internal'
             }

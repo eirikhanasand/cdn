@@ -27,12 +27,12 @@ export default fp(async function wsSharePlugin(fastify: FastifyInstance) {
 
         fastify.get('/api/ws/share/:name/shell/:user/:id', { websocket: true }, async (connection, req: FastifyRequest) => {
             try {
-                const { name, user } = (req.params as { id: string, name: string, user: string })
+                const { id, name, user } = (req.params as { id: string, name: string, user: string })
                 const roomId = name
 
                 registerClient(roomId, connection, shellClients)
 
-                followShell(connection, roomId, name, user)
+                followShell(connection, roomId, name, user, id)
 
                 connection.on('message', (message) => {
                     handleTerminalMessage(roomId, connection, message)
