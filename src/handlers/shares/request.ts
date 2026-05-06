@@ -25,7 +25,7 @@ export default async function requestFromShareVm(req: FastifyRequest, res: Fasti
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${encodeURIComponent(config.vm_token || '')}`
+                'Authorization': `Bearer ${encodeURIComponent(config.vm_api_token || '')}`
             },
             body: JSON.stringify({
                 ...payload,
