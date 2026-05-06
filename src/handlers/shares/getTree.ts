@@ -8,6 +8,7 @@ import run from '#db'
 export default async function getTree(req: FastifyRequest, res: FastifyReply) {
     const { id } = req.params as { id: string }
     const { flat } = req.query as { flat?: boolean } ?? {}
+    res.header('Cache-Control', 'no-store')
 
     try {
         const shareQuery = 'SELECT * FROM shares WHERE id = $1'

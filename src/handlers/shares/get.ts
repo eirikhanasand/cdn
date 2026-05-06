@@ -6,6 +6,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export default async function getShare(req: FastifyRequest, res: FastifyReply) {
     const { id } = req.params as { id: string }
+    res.header('Cache-Control', 'no-store')
+
     if (!id) {
         return res.status(400).send({ error: 'Missing share ID' })
     }
