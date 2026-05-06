@@ -14,6 +14,10 @@ sub vcl_recv {
         return (pass);
     }
 
+    if (req.url ~ "^/s(?:[/?#]|$)") {
+        return (pass);
+    }
+
     if (req.url ~ "^/api/(share|vm|words)(/.*)?$") {
         return (pass);
     }
