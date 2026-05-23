@@ -11,7 +11,7 @@ WORKDIR /usr/src/app
 COPY . .
 COPY ./entrypoint.sh /usr/src/app/entrypoint.sh
 COPY ./default.vcl /etc/varnish/default.vcl
-COPY package.json bun.lock ./
+COPY package.json bun.lock bunfig.toml ./
 
 # Adds execute permissions to entrypoint script
 RUN chmod +x /usr/src/app/entrypoint.sh
