@@ -6,6 +6,7 @@ backend default {
 }
 
 sub vcl_recv {
+    if (req.url ~ "^/health") { return (pass); }
     if (req.http.Upgrade ~ "(?i)websocket") {
         return (pipe);
     }

@@ -7,6 +7,7 @@ export default async function tokenWrapper(id: string, token: string): Promise<{
 
     try {
         const response = await fetch(`${config.api}/auth/token/${id}`, {
+            signal: AbortSignal.timeout(5000),
             headers: {
                 'Authorization': `Bearer ${token}`
             }

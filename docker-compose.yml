@@ -17,6 +17,13 @@ services:
       DB_HOST: postgres
       INTERNAL_API: ${INTERNAL_API:-https://internal.hanasand.com/api}
       INTERNAL_WSS: ${INTERNAL_WSS:-wss://internal.hanasand.com/api/ws}
+    volumes:
+      - data:/var/lib/cdn/files
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     ports:
       - "8501:8080"
 
@@ -59,4 +66,6 @@ services:
       DB_HOST: postgres
 
 volumes:
+  data:
+    name: cdn_data
   postgres_data:

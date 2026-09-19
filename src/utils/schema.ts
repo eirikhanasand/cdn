@@ -52,8 +52,9 @@ export default async function ensureSchema() {
         `)
 
         await client.query(`
-            ALTER TABLE files
-            ADD COLUMN IF NOT EXISTS owner TEXT;
+            ALTER TABLE files ADD COLUMN IF NOT EXISTS owner TEXT;
+            ALTER TABLE files ADD COLUMN IF NOT EXISTS storage_key TEXT;
+            ALTER TABLE files ADD COLUMN IF NOT EXISTS storage_size BIGINT;
 
             CREATE INDEX IF NOT EXISTS idx_files_owner_uploaded_at
             ON files(owner, uploaded_at DESC);

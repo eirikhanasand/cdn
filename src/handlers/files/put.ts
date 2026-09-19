@@ -2,6 +2,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import tokenWrapper from '#utils/auth/tokenWrapper.ts'
 import filePermissionsWrapper from '#utils/auth/filePermissionsWrapper.ts'
 import run from '#db'
+import { persistFile, removeStoredFile, StorageError } from '#utils/fileStorage.ts'
+import { beginUpload } from '#utils/uploadGuard.ts'
 
 type PutFileProps = {
     name?: string
@@ -48,7 +50,7 @@ export default async function putFile(req: FastifyRequest, res: FastifyReply) {
 
     if (data) {
         updates.push(`data = $${index++}`)
-        values.push(Buffer.from(data, 'base64'))
+        values.push(Buffer.alloc(0))
     }
 
     if (path) {
@@ -65,7 +67,24 @@ export default async function putFile(req: FastifyRequest, res: FastifyReply) {
     const sql = `UPDATE files SET ${updates.join(', ')} WHERE id = $${index} RETURNING id`
 
     try {
-        const result = await run(sql, values)
+        let result
+        if (data) {
+            const finish = beginUpload(userId)
+            let oldKey: string | undefined
+            try {
+                const current = await run('SELECT owner FROM files WHERE id=$1', [id])
+                const buffer = Buffer.from(data, 'base64')
+                await persistFile(current.rows[0]?.owner || userId, buffer, async (client, key) => {
+                    const old = await client.query('SELECT storage_key FROM files WHERE id=$1 FOR UPDATE', [id])
+                    if (!old.rows.length) throw new StorageError(404, 'File not found')
+                    oldKey = old.rows[0].storage_key
+                    result = await client.query(sql, values)
+                    await client.query('UPDATE files SET storage_key=$2,storage_size=$3 WHERE id=$1', [id,key,buffer.length])
+                }, id)
+                await removeStoredFile(oldKey)
+            } finally { finish() }
+        } else result = await run(sql, values)
+        if (!result) throw new Error('File update failed')
 
         if (result.rows.length === 0) {
             return res.status(404).send({ error: 'File not found' })
@@ -73,6 +92,7 @@ export default async function putFile(req: FastifyRequest, res: FastifyReply) {
 
         return { updated: result.rows[0].id }
     } catch (error) {
+        if (error instanceof StorageError) return res.status(error.statusCode).send({ error: error.message })
         console.log(error)
         return res.status(500).send({ error: 'Internal server error' })
     }

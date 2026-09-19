@@ -1,99 +1,37 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { randomUUID } from 'crypto'
-import run from '#db'
-import streamToBuffer from './streamToBuffer.ts'
+import { randomUUID } from 'node:crypto'
 import tokenWrapper from '#utils/auth/tokenWrapper.ts'
-
-type MultipartValue<T = unknown> = MultipartFile | MultipartField<T>
-
-interface MultipartFile {
-    type: 'file'
-    fieldname: string
-    filename: string
-    encoding: string
-    mimetype: string
-    file: NodeJS.ReadableStream
-}
-
-interface MultipartField<T = string> {
-    type: 'field'
-    fieldname: string
-    value: T
-}
+import { persistFile, maxFileBytes, StorageError } from '#utils/fileStorage.ts'
+import { beginUpload } from '#utils/uploadGuard.ts'
 
 export default async function postFile(req: FastifyRequest, res: FastifyReply) {
-    if (!req.isMultipart?.()) {
-        return res.status(400).send({ error: 'Request is not multipart' })
-    }
-
+    const user = typeof req.headers.id === 'string' ? req.headers.id : ''
+    const auth = await tokenWrapper(user, req.headers.authorization?.split(' ')[1] || '')
+    if (!auth.status || !auth.id) return res.status(401).send({ error: 'Sign in to upload files.' })
+    if (!req.isMultipart()) return res.status(400).send({ error: 'Request is not multipart' })
+    let finish: (() => void) | undefined
     try {
-        const parts: {
-            name?: string
-            description?: string
-            path?: string
-            type?: string
-            fileBuffer?: Buffer
-        } = {}
-
-
-        for await (const part of req.parts() as AsyncIterable<MultipartValue>) {
-            if (part.type === 'file') {
-                const filePart = part as MultipartFile
-                parts.fileBuffer = await streamToBuffer(filePart.file)
-            } else {
-                const fieldName = part.fieldname
-                const value = part.value
-                if (['name', 'description', 'path', 'type'].includes(fieldName)) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (parts as any)[fieldName] = value
-                }
-            }
+        finish = beginUpload(auth.id)
+        const fields: Record<string, string> = {}
+        let data: Buffer | undefined
+        for await (const part of req.parts({ limits: { fileSize: maxFileBytes, files: 1, fields: 4, parts: 5 } })) {
+            if (part.type === 'file') data = await part.toBuffer()
+            else if (['name', 'description', 'path', 'type'].includes(part.fieldname)) fields[part.fieldname] = String(part.value)
         }
-
-        const { name, description, path, type, fileBuffer } = parts
-
-        if (!name || !fileBuffer || !type) {
-            return res.status(400).send({ error: 'Missing required fields: name, file, or type' })
-        }
-
-        const id = randomUUID().slice(0, 6)
-        const filePath = path || id
-        const owner = await authenticatedOwner(req)
-
-        const result = await run(
-            `INSERT INTO files (id, name, description, data, path, type, owner)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (path) DO UPDATE
-            SET path = EXCLUDED.path
-            RETURNING 
-              CASE 
-                WHEN xmax = 0 THEN 'ok'
-                ELSE 'conflict'
-              END AS status;`,
-            [id, name, description || null, fileBuffer, filePath, type, owner]
-        )
-
-        if (result.rows[0].status === 'conflict') {
-            return res.status(409).send({ error: `Path '${filePath}' taken` })
-        }
-
-        return res.send({ id, owner })
+        if (!fields.name || !fields.type || !data) return res.status(400).send({ error: 'Missing name, file, or type.' })
+        const id = randomUUID()
+        const path = fields.path || id
+        await persistFile(auth.id, data, async (client, key) => {
+            await client.query(`INSERT INTO files (id,name,description,data,path,type,owner,storage_key,storage_size)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+            [id, fields.name, fields.description || null, Buffer.alloc(0), path, fields.type, auth.id, key, data!.length])
+        })
+        return res.send({ id, path, owner: auth.id })
     } catch (error) {
-        console.error(error)
-        return res.status(500).send({ error: 'Internal server error' })
-    }
-}
-
-async function authenticatedOwner(req: FastifyRequest) {
-    const user = req.headers.id
-    const tokenHeader = req.headers.authorization || ''
-    const token = Array.isArray(tokenHeader) ? tokenHeader[0]?.split(' ')[1] : tokenHeader.split(' ')[1]
-    const userId = Array.isArray(user) ? user[0] : user
-
-    if (!userId || !token) {
-        return null
-    }
-
-    const auth = await tokenWrapper(userId, token)
-    return auth.status ? auth.id : null
+        const e = error as Error & { statusCode?: number, code?: string }
+        if (e.code === '23505') return res.status(409).send({ error: 'That file path is already taken.' })
+        if (error instanceof StorageError || e.statusCode === 413) return res.status(e.statusCode || 413).send({ error: e.message })
+        req.log.error({ error }, 'Upload failed')
+        return res.status(500).send({ error: 'Upload failed.' })
+    } finally { finish?.() }
 }

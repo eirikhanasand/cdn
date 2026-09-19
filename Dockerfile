@@ -6,6 +6,8 @@ RUN apk add --no-cache varnish
 
 # Sets the working directory
 WORKDIR /usr/src/app
+ARG HANASAND_RELEASE_COMMIT=unknown
+ENV HANASAND_RELEASE_COMMIT=$HANASAND_RELEASE_COMMIT
 
 # Copies contents
 COPY . .

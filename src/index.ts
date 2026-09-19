@@ -1,6 +1,8 @@
 import cors from '@fastify/cors'
 import Fastify from 'fastify'
 import routes from './routes.ts'
+import health from './handlers/index/health.ts'
+import { prepareStorage } from '#utils/fileStorage.ts'
 import getIndex from './handlers/index/get.ts'
 import getRobotsTxt from './handlers/index/getRobotsTxt.ts'
 import websocketPlugin from '@fastify/websocket'
@@ -48,10 +50,12 @@ fastify.register(ws, { prefix: '/api' })
 fastify.register(routes, { prefix: '/api' })
 
 fastify.get('/', getIndex)
+fastify.get('/health', health)
 fastify.get('/robots.txt', getRobotsTxt)
 
 try {
     await ensureSchema()
+    await prepareStorage()
     fastify.register(fp)
     await fastify.listen({ port, host: '0.0.0.0' })
 } catch (error) {

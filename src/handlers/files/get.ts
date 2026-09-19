@@ -1,12 +1,13 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import run from '#db'
+import { fileBody } from '#utils/fileStorage.ts'
 
 export default async function getFile(req: FastifyRequest, res: FastifyReply) {
     const { id } = req.params as { id: string }
 
     try {
         const result = await run(
-            'SELECT id, name, description, data, type, path, uploaded_at FROM files WHERE id = $1',
+            'SELECT id, name, description, data, storage_key, type, path, uploaded_at FROM files WHERE id = $1',
             [id]
         )
 
@@ -17,7 +18,9 @@ export default async function getFile(req: FastifyRequest, res: FastifyReply) {
         const file = result.rows[0]
         res.header('Content-Type', file.type)
         res.header('Content-Disposition', `inline; filename="${file.name}"`)
-        return res.send(file.data)
+        res.header('X-Content-Type-Options', 'nosniff')
+        res.header('Cache-Control', 'public, max-age=60')
+        return res.send(fileBody(file))
     } catch (error) {
         console.log(error)
         res.status(500).send({ error: 'Internal server error' })
