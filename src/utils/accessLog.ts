@@ -6,12 +6,14 @@ const headers = new Set([
     'sec-ch-ua-platform', 'sec-fetch-dest', 'sec-fetch-mode', 'sec-fetch-site', 'sec-fetch-user', 'x-forwarded-for', 'x-forwarded-host',
     'x-forwarded-proto', 'x-real-ip', 'via', 'x-request-id', 'traceparent', 'tracestate', 'x-varnish',
 ])
+// eslint-disable-next-line no-control-regex -- Retain access records containing control bytes or attack indicators.
+const suspicious = /[\x00-\x08\x0a-\x1f\x7f<>]|\$\{|jndi:|\.\.[/\\]|\bunion\s+(?:all\s+)?select\b|\bsleep\s*\(|\/etc\/passwd|\/\.env/i
 
 export function accessLog(req: FastifyRequest, res: FastifyReply) {
     // Supply inspection evidence, not a local drop policy. Hanasand's editable
     // Analyze rule decides retention centrally; disabling it keeps these logs.
     const safeHeaders = Object.entries(req.headers).every(([name, value]) => headers.has(name.toLowerCase())
-        && String(value || '').length <= 4096 && !/[<>\r\n]|\$\{|jndi:/i.test(String(value || '')))
+        && String(value || '').length <= 4096 && !suspicious.test(String(value || '')))
     return { key: `http-cdn:${req.id}`, method: req.method, path: req.url.split('?')[0], status: res.statusCode,
         ip: req.ip, timestamp: new Date().toISOString(), inspection: {
             version: 1,

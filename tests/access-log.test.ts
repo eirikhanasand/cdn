@@ -17,5 +17,7 @@ test('emits inspection facts without headers or body content; unknown evidence s
         expect(JSON.stringify(records[1])).not.toContain('private-test-value')
         await app.inject({ url: '/public?unknown=value' })
         expect(records[2].inspection.pathSafe).toBe(false)
+        await app.inject({ url: '/public', headers: { 'user-agent': 'union select * from users' } })
+        expect(records[3].inspection.headersSafe).toBe(false)
     } finally { await app.close() }
 })
