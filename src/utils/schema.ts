@@ -26,19 +26,20 @@ export default async function ensureSchema() {
                 PRIMARY KEY (domain, bucket)
             );
 
-            ALTER TABLE request_metric_totals
-            DROP CONSTRAINT IF EXISTS request_metric_totals_metric_type_check;
-
-            ALTER TABLE request_metric_recent_hourly
-            DROP CONSTRAINT IF EXISTS request_metric_recent_hourly_metric_type_check;
-
-            ALTER TABLE request_metric_totals
-            ADD CONSTRAINT request_metric_totals_metric_type_check
-            CHECK (metric_type IN ('path', 'ip', 'user_agent', 'domain'));
-
-            ALTER TABLE request_metric_recent_hourly
-            ADD CONSTRAINT request_metric_recent_hourly_metric_type_check
-            CHECK (metric_type IN ('path', 'ip', 'user_agent', 'domain'));
+            DO $migration$
+            DECLARE target TEXT;
+            BEGIN
+                FOREACH target IN ARRAY ARRAY['request_metric_totals', 'request_metric_recent_hourly'] LOOP
+                    IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                        WHERE conrelid=target::regclass AND conname=target || '_metric_type_check'
+                            AND convalidated AND pg_get_constraintdef(oid) LIKE '%''domain''%') THEN
+                        EXECUTE format('ALTER TABLE %I DROP CONSTRAINT IF EXISTS %I', target, target || '_metric_type_check');
+                        EXECUTE format('ALTER TABLE %I ADD CONSTRAINT %I CHECK '
+                            || '(metric_type IN (''path'',''ip'',''user_agent'',''domain''))',
+                            target, target || '_metric_type_check');
+                    END IF;
+                END LOOP;
+            END $migration$;
 
             CREATE TABLE IF NOT EXISTS request_metric_relations (
                 primary_type TEXT NOT NULL CHECK (primary_type IN ('ip', 'user_agent')),
@@ -58,9 +59,6 @@ export default async function ensureSchema() {
 
             CREATE INDEX IF NOT EXISTS idx_files_owner_uploaded_at
             ON files(owner, uploaded_at DESC);
-
-            DROP INDEX IF EXISTS idx_request_logs_domain;
-            DROP INDEX IF EXISTS idx_request_logs_last_seen;
 
             CREATE UNIQUE INDEX IF NOT EXISTS idx_request_logs_identity
             ON request_logs(domain, ip, user_agent, path);
@@ -90,9 +88,9 @@ export default async function ensureSchema() {
             ON request_metric_live_tps(bucket DESC);
         `)
 
-        const totalsCount = await client.query<{ count: string }>('SELECT COUNT(*)::text AS count FROM request_metric_totals')
+        const totals = await client.query<{ populated: boolean }>('SELECT EXISTS(SELECT 1 FROM request_metric_totals) AS populated')
 
-        if (Number(totalsCount.rows[0]?.count ?? '0') === 0) {
+        if (!totals.rows[0].populated) {
             await client.query(`
                 WITH combined AS (
                     SELECT ip::text AS ip, user_agent, path, hits, last_seen

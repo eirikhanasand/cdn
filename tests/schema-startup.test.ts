@@ -3,7 +3,7 @@ let populated = true
 const statements: string[] = []
 mock.module('#db', () => ({ withClient: async (work: (client: unknown) => Promise<void>) => work({ query: async (sql: string) => {
     statements.push(sql)
-    if (sql.includes('SELECT COUNT(*)')) return { rows: [{ count: '100' }] }
+    if (sql.includes('AS populated')) return { rows: [{ populated: true }] }
     if (sql.includes('SELECT EXISTS')) return { rows: [{ domain: populated, hourly: populated, live: populated }] }
     return { rows: [] }
 } }) }))
@@ -12,6 +12,8 @@ test('normal restarts keep maintained totals without scanning the archive', asyn
     await ensureSchema()
     expect(statements.some(sql => sql.includes('WITH combined') || sql.includes('WITH live'))).toBe(false)
     expect(statements.some(sql => sql.includes('DELETE FROM request_metric_live_tps'))).toBe(true)
+    expect(statements.some(sql => sql.includes('DROP INDEX'))).toBe(false)
+    expect(statements.some(sql => sql.includes('convalidated AND pg_get_constraintdef'))).toBe(true)
 })
 test('initial bootstrap still fills missing domain and live aggregates', async () => {
     statements.length = 0
