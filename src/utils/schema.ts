@@ -216,7 +216,14 @@ export default async function ensureSchema() {
             `)
         }
 
-        await client.query(`
+        const populated = await client.query<{ domain: boolean, hourly: boolean, live: boolean }>(`
+            SELECT EXISTS(SELECT 1 FROM request_metric_totals WHERE metric_type='domain') AS domain,
+                EXISTS(SELECT 1 FROM request_metric_recent_hourly WHERE metric_type='domain') AS hourly,
+                EXISTS(SELECT 1 FROM request_metric_live_tps) AS live
+        `)
+        // updateRollups maintains these tables with each request. Rebuilding them
+        // on every restart scans the full archive and blocks the HTTP listener.
+        if (!populated.rows[0].domain) await client.query(`
             WITH combined AS (
                 SELECT domain, hits, last_seen
                 FROM request_logs_all
@@ -238,7 +245,7 @@ export default async function ensureSchema() {
                 last_seen = GREATEST(request_metric_totals.last_seen, EXCLUDED.last_seen);
         `)
 
-        await client.query(`
+        if (!populated.rows[0].hourly) await client.query(`
             WITH combined AS (
                 SELECT domain, hits, date_trunc('hour', last_seen) AS bucket
                 FROM request_logs_all
@@ -260,7 +267,7 @@ export default async function ensureSchema() {
             DO UPDATE SET hits = EXCLUDED.hits;
         `)
 
-        await client.query(`
+        if (!populated.rows[0].live) await client.query(`
             WITH live AS (
                 SELECT
                     domain,
