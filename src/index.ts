@@ -12,10 +12,17 @@ import fp from '#utils/refresh/fp.ts'
 import ensureSchema from '#utils/schema.ts'
 import registerPublicReadRateLimiter from '#utils/rateLimit/publicReadLimiter.ts'
 import loadInstallScript from './install/loadInstallScript.ts'
+import { randomUUID } from 'node:crypto'
+import { accessLog } from './utils/accessLog.ts'
 
 const fastify = Fastify({
-    logger: true
+    logger: true,
+    disableRequestLogging: true,
+    genReqId: () => randomUUID(),
+    // Only the local Varnish hop may supply a forwarded address.
+    trustProxy: ['127.0.0.1', '::1'],
 })
+fastify.addHook('onResponse', async (req, res) => { req.log.info({ access: accessLog(req, res) }, 'http_access') })
 
 fastify.register(fastifyMultipart, {
     limits: {
